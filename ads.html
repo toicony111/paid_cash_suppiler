@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coin Simple</title>
+    <title>Paid Cash Supplier</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <style>
@@ -18,11 +18,10 @@
             padding-bottom: 80px;
         }
 
-        /* Header */
         .header {
             text-align: center;
             padding: 20px;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             color: #ffd700;
         }
@@ -45,11 +44,9 @@
             margin-top: 5px;
         }
 
-        /* Tab Content */
         .tab-content { display: none; padding: 15px; }
         .tab-content.active { display: block; }
 
-        /* Watch Ads */
         .ads-left {
             text-align: center;
             color: #888;
@@ -68,7 +65,6 @@
             margin-top: 10px;
         }
 
-        /* Referral */
         .ref-card {
             background: #1a1a2e;
             border-radius: 12px;
@@ -101,16 +97,13 @@
             justify-content: space-around;
             margin-top: 15px;
         }
-        .ref-stat {
-            text-align: center;
-        }
+        .ref-stat { text-align: center; }
         .ref-stat .num {
             font-size: 24px;
             font-weight: bold;
             color: #ffd700;
         }
 
-        /* Bottom Nav */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -140,7 +133,7 @@
 </head>
 <body>
 
-    <div class="header">Coin Simple 🪙</div>
+    <div class="header">💵 Paid Cash Supplier</div>
     <div class="balance-card">
         <div style="color:#aaa; font-size:14px;">💰 Balance</div>
         <div class="balance-amount" id="balance">0</div>
@@ -153,18 +146,13 @@
             <p>Total Payouts: <span style="color:#ffd700;">0 Coins</span></p>
             <p style="margin-top:10px;">Min Withdraw: 3000 Coins</p>
         </div>
-        <button class="watch-btn" style="background:#00b4d8; margin-top:20px;" onclick="alert('Coming soon')">Withdraw</button>
+        <button class="watch-btn" style="background:#00b4d8;" onclick="alert('Coming soon')">Withdraw</button>
     </div>
 
     <!-- Tab Watch Ads -->
     <div class="tab-content" id="tab-ads">
         <div class="ads-left">📺 Ads watched today: <span id="adsWatched">0</span></div>
         <div class="ads-left">+24 Coins per ad</div>
-        <adsgram-task 
-            id="adsgram" 
-            data-block-id="YOUR_BLOCK_ID"
-            data-debug="false">
-        </adsgram-task>
         <button class="watch-btn" id="watchAdBtn">▶ Watch Ads +24 Coins</button>
     </div>
 
@@ -173,7 +161,7 @@
         <div class="ref-card">
             <h3>👥 Invite Friends</h3>
             <p style="color:#888; margin:10px 0;">Earn 10% from ref earnings</p>
-            <div class="ref-link-box" id="refLink">https://t.me/coinsimplebot?start=ref123</div>
+            <div class="ref-link-box" id="refLink">https://t.me/PaidCashSupplierBot?start=ref123</div>
             <button class="copy-btn" onclick="copyRef()">📋 Copy Link</button>
             <div class="ref-stats">
                 <div class="ref-stat">
@@ -218,19 +206,38 @@
             tg.showPopup({ message: 'Link copied!' });
         }
 
-        // Adsgram reward
-        const adEl = document.getElementById('adsgram');
-        adEl.addEventListener('reward', () => {
-            let bal = parseInt(document.getElementById('balance').innerText) + 24;
-            document.getElementById('balance').innerText = bal;
-            document.getElementById('balanceUsd').innerText = (bal * 0.00001).toFixed(4);
-            let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
-            document.getElementById('adsWatched').innerText = watched;
-            tg.showPopup({ message: '+24 Coins earned!' });
-        });
+        // Tạo Adsgram task động để tránh lỗi blockId
+        function showAdsgramAd() {
+            // Xóa task cũ nếu có
+            const old = document.getElementById('adsgram-task');
+            if (old) old.remove();
+
+            // Tạo task mới
+            const task = document.createElement('adsgram-task');
+            task.id = 'adsgram-task';
+            task.setAttribute('data-block-id', 'task-1'); // Thay task-1 bằng ID thật từ Adsgram
+            task.style.display = 'none';
+            document.getElementById('tab-ads').appendChild(task);
+
+            task.addEventListener('reward', () => {
+                let bal = parseInt(document.getElementById('balance').innerText) + 24;
+                document.getElementById('balance').innerText = bal;
+                document.getElementById('balanceUsd').innerText = (bal * 0.00001).toFixed(4);
+                let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
+                document.getElementById('adsWatched').innerText = watched;
+                tg.showPopup({ message: '+24 Coins earned!' });
+            });
+
+            task.addEventListener('onError', (e) => {
+                tg.showPopup({ message: 'Ad error, try again later' });
+            });
+
+            // Trigger ad
+            setTimeout(() => task.click(), 100);
+        }
 
         document.getElementById('watchAdBtn').onclick = () => {
-            document.getElementById('adsgram').click();
+            showAdsgramAd();
         };
     </script>
 </body>
