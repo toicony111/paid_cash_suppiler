@@ -17,7 +17,6 @@
             padding-bottom: 80px;
         }
 
-        /* Animated background */
         body::before {
             content: '';
             position: fixed;
@@ -34,7 +33,6 @@
             background: linear-gradient(90deg, #ffd700, #ffaa00, #ffd700);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: none;
             animation: shimmer 2s infinite;
         }
         @keyframes shimmer {
@@ -169,6 +167,7 @@
             background: rgba(26,26,46,0.95);
             border-top: 1px solid #333;
             backdrop-filter: blur(10px);
+            z-index: 10;
         }
         .nav-item {
             flex: 1;
@@ -193,7 +192,6 @@
         }
         .nav-icon { font-size: 22px; display: block; margin-bottom: 3px; }
 
-        /* Info cards */
         .info-row {
             display: flex;
             gap: 10px;
@@ -209,6 +207,160 @@
         }
         .info-chip .val { color: #ffd700; font-weight: bold; font-size: 16px; }
         .info-chip .lbl { color: #888; font-size: 12px; margin-top: 4px; }
+
+        /* Withdraw Form */
+        .withdraw-card {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 10px 0;
+            border: 2px solid #333;
+        }
+        .withdraw-card h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            background: #0d1117;
+            border: 2px solid #333;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            transition: 0.3s;
+            outline: none;
+        }
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: #ffd700;
+        }
+        .form-group select option {
+            background: #1a1a2e;
+            color: white;
+        }
+        .min-max {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .error-msg {
+            color: #ff4444;
+            font-size: 13px;
+            display: none;
+            margin-top: 5px;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #0a0a1a;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Confirm popup */
+        .confirm-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .confirm-overlay.show { display: flex; }
+        .confirm-box {
+            background: #1a1a2e;
+            padding: 25px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 380px;
+            border: 2px solid #ffd700;
+            text-align: center;
+        }
+        .confirm-box p { margin: 8px 0; color: #ccc; font-size: 14px; }
+        .confirm-box .confirm-val { color: #ffd700; font-weight: bold; }
+        .confirm-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .confirm-btns button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-cancel { background: #333; color: white; }
+        .btn-confirm { background: #ffd700; color: #0a0a1a; }
+
+        /* Success screen */
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .success-screen.show { display: block; }
+        .success-screen .icon { font-size: 60px; margin-bottom: 20px; }
+        .success-screen h3 { color: #ffd700; margin-bottom: 10px; }
+        .success-screen p { color: #aaa; font-size: 14px; }
+
+        /* History list */
+        .history-item {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 8px 0;
+            border: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-item .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-pending { background: #ffaa00; color: #0a0a1a; }
+        .status-completed { background: #00c853; color: white; }
     </style>
 </head>
 <body>
@@ -218,32 +370,83 @@
 
     <div class="balance-card">
         <div style="color:#aaa; font-size:13px;">💰 Your Balance</div>
-        <div class="balance-amount" id="balance">0</div>
-        <div class="balance-usd">Coins ≈ $<span id="balanceUsd">0.00</span></div>
+        <div class="balance-amount" id="balance">5000</div>
+        <div class="balance-usd">Coins ≈ $<span id="balanceUsd">5.00</span></div>
     </div>
 
     <!-- Tab Wallet -->
     <div class="tab-content active" id="tab-wallet">
-        <div class="info-row">
-            <div class="info-chip">
-                <div class="val">$1.00</div>
-                <div class="lbl">Min Withdraw</div>
+        <div id="wallet-main">
+            <div class="info-row">
+                <div class="info-chip">
+                    <div class="val">$1.00</div>
+                    <div class="lbl">Min Withdraw</div>
+                </div>
+                <div class="info-chip">
+                    <div class="val">24/7</div>
+                    <div class="lbl">Payout Speed</div>
+                </div>
+                <div class="info-chip">
+                    <div class="val">Crypto</div>
+                    <div class="lbl">Payment</div>
+                </div>
             </div>
-            <div class="info-chip">
-                <div class="val">24/7</div>
-                <div class="lbl">Payout Speed</div>
-            </div>
-            <div class="info-chip">
-                <div class="val">Crypto</div>
-                <div class="lbl">Payment</div>
+            <button class="watch-btn btn-blue" onclick="showWithdrawForm()">
+                💸 Withdraw Now
+            </button>
+            <button class="back-btn" onclick="switchTab('ads')" style="margin-top:8px;">
+                📺 Earn More Coins
+            </button>
+        </div>
+
+        <!-- Withdraw Form (hidden by default) -->
+        <div id="withdraw-form" style="display:none;">
+            <div class="withdraw-card">
+                <h3>💸 Withdraw Funds</h3>
+
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <select id="paymentMethod" onchange="updatePlaceholder()">
+                        <option value="ltc">Litecoin (LTC)</option>
+                        <option value="matic">Polygon (MATIC)</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="faucetpay">FaucetPay (LTC)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="walletLabel">Wallet Address (LTC)</label>
+                    <input type="text" id="walletAddress" placeholder="Enter your LTC wallet address">
+                    <div class="error-msg" id="walletError">Please enter a valid wallet address</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Amount (Coins)</label>
+                    <input type="number" id="withdrawAmount" placeholder="Min: 1000 coins" min="1000" max="" value="">
+                    <div class="min-max">
+                        <span>Min: 1,000 coins ($1.00)</span>
+                        <span>Balance: <span id="formBalance">5000</span> coins</span>
+                    </div>
+                    <div class="error-msg" id="amountError">Minimum withdraw is 1,000 coins</div>
+                </div>
+
+                <button class="submit-btn" id="submitWithdraw" onclick="confirmWithdraw()">
+                    ✅ Submit Withdrawal
+                </button>
+                <button class="back-btn" onclick="cancelWithdraw()">← Back to Wallet</button>
             </div>
         </div>
-        <div style="text-align:center; color:#888; margin:10px 0;">
-            <p>Total Payouts: <span style="color:#ffd700;">0 Coins</span></p>
+
+        <!-- Success Screen -->
+        <div class="success-screen" id="success-screen">
+            <div class="icon">✅</div>
+            <h3>Withdrawal Submitted!</h3>
+            <p>Your withdrawal request has been submitted successfully.</p>
+            <p>Payment will be processed within 24 hours.</p>
+            <button class="watch-btn" onclick="backToWallet()" style="margin-top:20px;">
+                ← Back to Wallet
+            </button>
         </div>
-        <button class="watch-btn btn-blue" onclick="alert('Coming soon! Min withdraw $1')">
-            💸 Withdraw Now
-        </button>
     </div>
 
     <!-- Tab Watch Ads -->
@@ -276,6 +479,21 @@
         </div>
     </div>
 
+    <!-- Confirm Overlay -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-box">
+            <h3>⚠️ Confirm Withdrawal</h3>
+            <p>Method: <span class="confirm-val" id="confirmMethod">-</span></p>
+            <p>Wallet: <span class="confirm-val" id="confirmWallet">-</span></p>
+            <p>Amount: <span class="confirm-val" id="confirmAmount">-</span> Coins</p>
+            <p style="color:#ffaa00; font-size:12px;">⚠️ Double check your wallet address!</p>
+            <div class="confirm-btns">
+                <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+                <button class="btn-confirm" onclick="processWithdraw()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation -->
     <div class="bottom-nav">
         <div class="nav-item active" data-tab="wallet" onclick="switchTab('wallet')">
@@ -294,11 +512,21 @@
         tg.ready();
         tg.expand();
 
+        // Store withdrawal history
+        let withdrawalHistory = [];
+
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            
+            // Reset wallet view when switching
+            if (tab === 'wallet') {
+                document.getElementById('wallet-main').style.display = 'block';
+                document.getElementById('withdraw-form').style.display = 'none';
+                document.getElementById('success-screen').classList.remove('show');
+            }
         }
 
         function copyRef() {
@@ -306,16 +534,152 @@
             tg.showPopup({ message: '✅ Link copied! Share it to earn.' });
         }
 
+        // Watch Ads
         document.getElementById('watchAdBtn').onclick = () => {
-            // Random reward 10-500
             const reward = Math.floor(Math.random() * 491) + 10;
             let bal = parseInt(document.getElementById('balance').innerText) + reward;
-            document.getElementById('balance').innerText = bal;
-            document.getElementById('balanceUsd').innerText = (bal * 0.00001).toFixed(2);
+            updateBalance(bal);
             let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
             document.getElementById('adsWatched').innerText = watched;
             tg.showPopup({ message: `🎉 +${reward} Coins earned!` });
         };
+
+        function updateBalance(newBal) {
+            document.getElementById('balance').innerText = newBal;
+            document.getElementById('balanceUsd').innerText = (newBal * 0.001).toFixed(2);
+            document.getElementById('formBalance').innerText = newBal;
+        }
+
+        // Withdraw Form
+        function showWithdrawForm() {
+            document.getElementById('wallet-main').style.display = 'none';
+            document.getElementById('withdraw-form').style.display = 'block';
+            document.getElementById('success-screen').classList.remove('show');
+            updatePlaceholder();
+        }
+
+        function cancelWithdraw() {
+            document.getElementById('wallet-main').style.display = 'block';
+            document.getElementById('withdraw-form').style.display = 'none';
+            document.getElementById('success-screen').classList.remove('show');
+            clearErrors();
+        }
+
+        function backToWallet() {
+            document.getElementById('wallet-main').style.display = 'block';
+            document.getElementById('withdraw-form').style.display = 'none';
+            document.getElementById('success-screen').classList.remove('show');
+        }
+
+        function updatePlaceholder() {
+            const method = document.getElementById('paymentMethod').value;
+            const label = document.getElementById('walletLabel');
+            const input = document.getElementById('walletAddress');
+            
+            switch(method) {
+                case 'ltc':
+                    label.innerText = 'Litecoin Wallet Address';
+                    input.placeholder = 'Enter your LTC wallet address (e.g. L...)';
+                    break;
+                case 'matic':
+                    label.innerText = 'Polygon Wallet Address';
+                    input.placeholder = 'Enter your MATIC wallet address (e.g. 0x...)';
+                    break;
+                case 'paypal':
+                    label.innerText = 'PayPal Email Address';
+                    input.placeholder = 'Enter your PayPal email address';
+                    break;
+                case 'faucetpay':
+                    label.innerText = 'FaucetPay Wallet Address';
+                    input.placeholder = 'Enter your FaucetPay LTC address';
+                    break;
+            }
+        }
+
+        function clearErrors() {
+            document.getElementById('walletError').style.display = 'none';
+            document.getElementById('amountError').style.display = 'none';
+            document.getElementById('walletAddress').style.borderColor = '#333';
+            document.getElementById('withdrawAmount').style.borderColor = '#333';
+        }
+
+        function confirmWithdraw() {
+            clearErrors();
+            
+            const wallet = document.getElementById('walletAddress').value.trim();
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            const balance = parseInt(document.getElementById('balance').innerText);
+            const method = document.getElementById('paymentMethod').value;
+            
+            let valid = true;
+
+            // Validate wallet
+            if (!wallet || wallet.length < 5) {
+                document.getElementById('walletError').style.display = 'block';
+                document.getElementById('walletAddress').style.borderColor = '#ff4444';
+                valid = false;
+            }
+
+            // Validate amount
+            if (!amount || amount < 1000) {
+                document.getElementById('amountError').innerText = 'Minimum withdraw is 1,000 coins ($1.00)';
+                document.getElementById('amountError').style.display = 'block';
+                document.getElementById('withdrawAmount').style.borderColor = '#ff4444';
+                valid = false;
+            } else if (amount > balance) {
+                document.getElementById('amountError').innerText = 'Insufficient balance!';
+                document.getElementById('amountError').style.display = 'block';
+                document.getElementById('withdrawAmount').style.borderColor = '#ff4444';
+                valid = false;
+            }
+
+            if (!valid) return;
+
+            // Show confirm popup
+            const methodNames = { ltc: 'Litecoin (LTC)', matic: 'Polygon (MATIC)', paypal: 'PayPal', faucetpay: 'FaucetPay' };
+            document.getElementById('confirmMethod').innerText = methodNames[method];
+            document.getElementById('confirmWallet').innerText = wallet.length > 20 ? wallet.substring(0, 20) + '...' : wallet;
+            document.getElementById('confirmAmount').innerText = amount.toLocaleString();
+            document.getElementById('confirmOverlay').classList.add('show');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirmOverlay').classList.remove('show');
+        }
+
+        function processWithdraw() {
+            const wallet = document.getElementById('walletAddress').value.trim();
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            const method = document.getElementById('paymentMethod').value;
+            const balance = parseInt(document.getElementById('balance').innerText);
+
+            // Deduct balance
+            updateBalance(balance - amount);
+
+            // Add to history
+            withdrawalHistory.unshift({
+                method: method,
+                wallet: wallet.substring(0, 8) + '...',
+                amount: amount,
+                status: 'Pending',
+                date: new Date().toLocaleDateString()
+            });
+
+            // Show success
+            document.getElementById('confirmOverlay').classList.remove('show');
+            document.getElementById('withdraw-form').style.display = 'none';
+            document.getElementById('success-screen').classList.add('show');
+
+            // Clear form
+            document.getElementById('walletAddress').value = '';
+            document.getElementById('withdrawAmount').value = '';
+        }
+
+        // Update max attribute on amount input
+        document.getElementById('withdrawAmount').addEventListener('input', function() {
+            const max = parseInt(document.getElementById('balance').innerText);
+            this.max = max;
+        });
     </script>
 </body>
 </html>
