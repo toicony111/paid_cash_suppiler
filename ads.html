@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Xem Quảng Cáo</title>
+    <!-- Nhúng SDK của Adsgram -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #ad-container { margin: 20px auto; max-width: 400px; }
+        #reward-status { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>📺 Xem quảng cáo để nhận thưởng</h2>
+    <div id="ad-container">
+        <!-- Quảng cáo Adsgram sẽ hiển thị ở đây -->
+        <adsgram-task 
+            data-block-id="YOUR_BLOCK_ID"
+            data-debug="false">
+        </adsgram-task>
+    </div>
+    <p id="reward-status"></p>
+
+    <script>
+        const adElement = document.querySelector('adsgram-task');
+        
+        adElement.addEventListener('reward', () => {
+            document.getElementById('reward-status').innerText = '✅ Bạn đã hoàn thành nhiệm vụ! +24 Coins';
+            // Gửi dữ liệu về bot qua Telegram Web App API
+            if (window.Telegram && window.Telegram.WebApp) {
+                Telegram.WebApp.sendData(JSON.stringify({ action: 'reward_claimed', coins: 24 }));
+            }
+        });
+
+        adElement.addEventListener('onError', (e) => {
+            document.getElementById('reward-status').innerText = '❌ Có lỗi xảy ra. Thử lại sau.';
+        });
+
+        // Khởi tạo Telegram Web App để giao tiếp với bot
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.MainButton.setText('Đóng').show().onClick(() => {
+                Telegram.WebApp.close();
+            });
+        }
+    </script>
+</body>
+</html>
