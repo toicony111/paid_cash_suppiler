@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paid Cash Supplier</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, sans-serif;
-            background: #0d1117;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(180deg, #0a0a1a 0%, #0d1117 100%);
             color: white;
             max-width: 500px;
             margin: 0 auto;
@@ -18,31 +17,68 @@
             padding-bottom: 80px;
         }
 
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(255,215,0,0.08), transparent 60%);
+            pointer-events: none;
+        }
+
         .header {
             text-align: center;
-            padding: 20px;
-            font-size: 22px;
+            padding: 25px 20px 10px;
+            font-size: 24px;
             font-weight: bold;
-            color: #ffd700;
+            background: linear-gradient(90deg, #ffd700, #ffaa00, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+            animation: shimmer 2s infinite;
         }
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
         .balance-card {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             margin: 10px 15px;
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 20px;
             text-align: center;
-            border: 1px solid #333;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 30px rgba(255,215,0,0.15);
+            position: relative;
+            overflow: hidden;
         }
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(transparent, rgba(255,215,0,0.05), transparent, rgba(255,215,0,0.05), transparent);
+            animation: rotate 6s linear infinite;
+        }
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+        .balance-card * { position: relative; }
         .balance-amount {
-            font-size: 36px;
+            font-size: 42px;
             font-weight: bold;
             color: #ffd700;
+            text-shadow: 0 0 20px rgba(255,215,0,0.4);
         }
-        .balance-usd {
-            color: #aaa;
-            font-size: 14px;
-            margin-top: 5px;
-        }
+        .balance-usd { color: #aaa; font-size: 14px; margin-top: 5px; }
 
         .tab-content { display: none; padding: 15px; }
         .tab-content.active { display: block; }
@@ -51,32 +87,41 @@
             text-align: center;
             color: #888;
             margin: 10px 0;
+            font-size: 15px;
         }
         .watch-btn {
             width: 100%;
             padding: 18px;
-            background: #ffd700;
-            color: #0d1117;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #0a0a1a;
             border: none;
-            border-radius: 12px;
+            border-radius: 15px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
+            box-shadow: 0 5px 25px rgba(255,215,0,0.3);
+            transition: 0.3s;
+        }
+        .watch-btn:active { transform: scale(0.95); box-shadow: 0 2px 10px rgba(255,215,0,0.2); }
+
+        .btn-blue {
+            background: linear-gradient(135deg, #00b4d8, #0096c7);
+            box-shadow: 0 5px 25px rgba(0,180,216,0.3);
         }
 
         .ref-card {
             background: #1a1a2e;
-            border-radius: 12px;
+            border-radius: 20px;
             padding: 20px;
             margin: 10px 0;
             text-align: center;
-            border: 1px solid #333;
+            border: 2px solid #333;
         }
         .ref-link-box {
             background: #0d1117;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             margin: 10px 0;
             word-break: break-all;
             font-size: 13px;
@@ -84,26 +129,35 @@
             border: 1px dashed #ffd700;
         }
         .copy-btn {
-            background: #ffd700;
-            color: #0d1117;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #0a0a1a;
             border: none;
             padding: 12px 30px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
+            font-size: 16px;
         }
         .ref-stats {
             display: flex;
             justify-content: space-around;
             margin-top: 15px;
+            gap: 10px;
         }
-        .ref-stat { text-align: center; }
+        .ref-stat {
+            text-align: center;
+            background: #0d1117;
+            padding: 15px;
+            border-radius: 12px;
+            flex: 1;
+        }
         .ref-stat .num {
             font-size: 24px;
             font-weight: bold;
             color: #ffd700;
         }
 
+        /* Bottom Nav */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -112,65 +166,111 @@
             width: 100%;
             max-width: 500px;
             display: flex;
-            background: #1a1a2e;
+            background: rgba(26,26,46,0.95);
             border-top: 1px solid #333;
+            backdrop-filter: blur(10px);
         }
         .nav-item {
             flex: 1;
             padding: 15px;
             text-align: center;
             cursor: pointer;
-            color: #888;
+            color: #666;
             font-size: 13px;
             transition: 0.3s;
+            position: relative;
         }
         .nav-item.active {
             color: #ffd700;
-            border-top: 2px solid #ffd700;
         }
-        .nav-icon { font-size: 20px; display: block; }
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 20%; right: 20%;
+            height: 2px;
+            background: #ffd700;
+            border-radius: 0 0 5px 5px;
+        }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 3px; }
+
+        /* Info cards */
+        .info-row {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .info-chip {
+            flex: 1;
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+        .info-chip .val { color: #ffd700; font-weight: bold; font-size: 16px; }
+        .info-chip .lbl { color: #888; font-size: 12px; margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <div class="header">💵 Paid Cash Supplier</div>
+    <div class="subtitle">Earn Free Crypto on Telegram</div>
+
     <div class="balance-card">
-        <div style="color:#aaa; font-size:14px;">💰 Balance</div>
+        <div style="color:#aaa; font-size:13px;">💰 Your Balance</div>
         <div class="balance-amount" id="balance">0</div>
-        <div class="balance-usd">Coins = $<span id="balanceUsd">0.00</span></div>
+        <div class="balance-usd">Coins ≈ $<span id="balanceUsd">0.00</span></div>
     </div>
 
     <!-- Tab Wallet -->
     <div class="tab-content active" id="tab-wallet">
-        <div style="text-align:center; color:#888; margin:20px 0;">
-            <p>Total Payouts: <span style="color:#ffd700;">0 Coins</span></p>
-            <p style="margin-top:10px;">Min Withdraw: 3000 Coins</p>
+        <div class="info-row">
+            <div class="info-chip">
+                <div class="val">$1.00</div>
+                <div class="lbl">Min Withdraw</div>
+            </div>
+            <div class="info-chip">
+                <div class="val">24/7</div>
+                <div class="lbl">Payout Speed</div>
+            </div>
+            <div class="info-chip">
+                <div class="val">Crypto</div>
+                <div class="lbl">Payment</div>
+            </div>
         </div>
-        <button class="watch-btn" style="background:#00b4d8;" onclick="alert('Coming soon')">Withdraw</button>
+        <div style="text-align:center; color:#888; margin:10px 0;">
+            <p>Total Payouts: <span style="color:#ffd700;">0 Coins</span></p>
+        </div>
+        <button class="watch-btn btn-blue" onclick="alert('Coming soon! Min withdraw $1')">
+            💸 Withdraw Now
+        </button>
     </div>
 
     <!-- Tab Watch Ads -->
     <div class="tab-content" id="tab-ads">
-        <div class="ads-left">📺 Ads watched today: <span id="adsWatched">0</span></div>
-        <div class="ads-left">+24 Coins per ad</div>
-        <button class="watch-btn" id="watchAdBtn">▶ Watch Ads +24 Coins</button>
+        <div class="ads-left">📺 Ads watched today: <span id="adsWatched" style="color:#ffd700;">0</span></div>
+        <div class="ads-left">🎁 Reward: <span style="color:#ffd700;">10-500 Coins/ad</span></div>
+        <button class="watch-btn" id="watchAdBtn">▶ Watch Ads & Earn</button>
+        <p style="text-align:center; color:#666; margin-top:15px; font-size:13px;">
+            💡 Watch full ad to receive random reward
+        </p>
     </div>
 
     <!-- Tab Referral -->
     <div class="tab-content" id="tab-ref">
         <div class="ref-card">
-            <h3>👥 Invite Friends</h3>
-            <p style="color:#888; margin:10px 0;">Earn 10% from ref earnings</p>
+            <h3>👥 Invite Friends & Earn</h3>
+            <p style="color:#888; margin:10px 0;">Get 10% from your referrals' earnings</p>
             <div class="ref-link-box" id="refLink">https://t.me/PaidCashSupplierBot?start=ref123</div>
-            <button class="copy-btn" onclick="copyRef()">📋 Copy Link</button>
+            <button class="copy-btn" onclick="copyRef()">📋 Copy Referral Link</button>
             <div class="ref-stats">
                 <div class="ref-stat">
                     <div class="num" id="refCount">0</div>
-                    <div style="color:#888;">Refs</div>
+                    <div style="color:#888;">Total Refs</div>
                 </div>
                 <div class="ref-stat">
                     <div class="num" id="refEarnings">0</div>
-                    <div style="color:#888;">Earned</div>
+                    <div style="color:#888;">Ref Earnings</div>
                 </div>
             </div>
         </div>
@@ -182,7 +282,7 @@
             <span class="nav-icon">💳</span> Wallet
         </div>
         <div class="nav-item" data-tab="ads" onclick="switchTab('ads')">
-            <span class="nav-icon">📺</span> Watch Ads
+            <span class="nav-icon">📺</span> Earn
         </div>
         <div class="nav-item" data-tab="ref" onclick="switchTab('ref')">
             <span class="nav-icon">👥</span> Referral
@@ -203,41 +303,18 @@
 
         function copyRef() {
             navigator.clipboard.writeText(document.getElementById('refLink').innerText);
-            tg.showPopup({ message: 'Link copied!' });
-        }
-
-        // Tạo Adsgram task động để tránh lỗi blockId
-        function showAdsgramAd() {
-            // Xóa task cũ nếu có
-            const old = document.getElementById('adsgram-task');
-            if (old) old.remove();
-
-            // Tạo task mới
-            const task = document.createElement('adsgram-task');
-            task.id = 'adsgram-task';
-            task.setAttribute('data-block-id', 'task-1'); // Thay task-1 bằng ID thật từ Adsgram
-            task.style.display = 'none';
-            document.getElementById('tab-ads').appendChild(task);
-
-            task.addEventListener('reward', () => {
-                let bal = parseInt(document.getElementById('balance').innerText) + 24;
-                document.getElementById('balance').innerText = bal;
-                document.getElementById('balanceUsd').innerText = (bal * 0.00001).toFixed(4);
-                let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
-                document.getElementById('adsWatched').innerText = watched;
-                tg.showPopup({ message: '+24 Coins earned!' });
-            });
-
-            task.addEventListener('onError', (e) => {
-                tg.showPopup({ message: 'Ad error, try again later' });
-            });
-
-            // Trigger ad
-            setTimeout(() => task.click(), 100);
+            tg.showPopup({ message: '✅ Link copied! Share it to earn.' });
         }
 
         document.getElementById('watchAdBtn').onclick = () => {
-            showAdsgramAd();
+            // Random reward 10-500
+            const reward = Math.floor(Math.random() * 491) + 10;
+            let bal = parseInt(document.getElementById('balance').innerText) + reward;
+            document.getElementById('balance').innerText = bal;
+            document.getElementById('balanceUsd').innerText = (bal * 0.00001).toFixed(2);
+            let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
+            document.getElementById('adsWatched').innerText = watched;
+            tg.showPopup({ message: `🎉 +${reward} Coins earned!` });
         };
     </script>
 </body>
