@@ -6,6 +6,7 @@
     <title>Paid Cash Supplier</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -551,6 +552,7 @@
         const API_URL = 'https://paid-cash-supplier-backend.onrender.com';
         const SUPABASE_URL = 'https://ctghldtpbmpibrxbldgn.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_L97Lx532FQ9nbwGbP4jT_A_wo_v5SR5';
+        const ADSGRAM_BLOCK_ID = '28714';
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const tg = window.Telegram.WebApp;
@@ -560,14 +562,11 @@
         let isSpinning = false;
         const tgUser = tg.initDataUnsafe?.user;
         const telegramId = tgUser?.id ? String(tgUser.id) : null;
-        
-        // Cache balance để giữ khi reload
         let cachedBalance = 0;
 
         // ========== INIT USER ==========
         async function initUser() {
             if (!telegramId) {
-                // Nếu không có telegramId, thử lấy từ localStorage
                 const saved = localStorage.getItem('pcs_balance');
                 if (saved) {
                     cachedBalance = parseInt(saved);
@@ -594,15 +593,11 @@
                 const data = await res.json();
 
                 if (data.user) {
-                    // Lấy balance từ server - ĐÂY LÀ NGUỒN CHÍNH XÁC
                     cachedBalance = data.user.balance;
                     updateBalance(cachedBalance);
-                    
-                    // Lưu backup vào localStorage
                     localStorage.setItem('pcs_balance', cachedBalance);
                     localStorage.setItem('pcs_balance_time', Date.now());
 
-                    // Cập nhật ref link
                     document.getElementById('refLink').innerText =
                         `https://t.me/PaidCashSupplierBot?start=ref${data.user.ref_code}`;
                     document.getElementById('refCount').innerText = data.user.ref_count || 0;
@@ -611,7 +606,6 @@
                 }
             } catch (e) {
                 console.error('Init error:', e);
-                // Fallback: dùng balance từ localStorage
                 const saved = localStorage.getItem('pcs_balance');
                 if (saved) {
                     cachedBalance = parseInt(saved);
@@ -624,7 +618,6 @@
         // ========== CLAIM REWARD ==========
         async function claimReward(reward) {
             if (!telegramId) {
-                // Offline: vẫn cập nhật UI tạm
                 cachedBalance += reward;
                 updateBalance(cachedBalance);
                 localStorage.setItem('pcs_balance', cachedBalance);
@@ -635,10 +628,7 @@
                 const res = await fetch(`${API_URL}/api/user/update-balance`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        telegram_id: telegramId,
-                        reward: reward
-                    })
+                    body: JSON.stringify({ telegram_id: telegramId, reward: reward })
                 });
                 const data = await res.json();
                 if (data.balance !== undefined) {
@@ -648,7 +638,6 @@
                 }
             } catch (e) {
                 console.error('Claim error:', e);
-                // Vẫn cộng local nếu mất mạng
                 cachedBalance += reward;
                 updateBalance(cachedBalance);
                 localStorage.setItem('pcs_balance', cachedBalance);
@@ -661,7 +650,6 @@
                 tg.showPopup({ message: '❌ Cannot connect to server' });
                 return false;
             }
-
             try {
                 const res = await fetch(`${API_URL}/api/withdraw`, {
                     method: 'POST',
@@ -674,15 +662,12 @@
                     })
                 });
                 const data = await res.json();
-
                 if (data.error) {
                     tg.showPopup({ message: '❌ ' + data.error });
                     return false;
-                } else {
-                    return true;
                 }
+                return true;
             } catch (e) {
-                console.error('Withdraw error:', e);
                 tg.showPopup({ message: '❌ Network error. Try again.' });
                 return false;
             }
@@ -730,7 +715,6 @@
                 }
             }
             if (pairs.length > 0) return pairs[Math.floor(Math.random() * pairs.length)];
-
             let bestPair = [1, 1], bestDiff = Infinity;
             for (let a = 1; a <= 20; a++) {
                 for (let b = 1; b <= 10; b++) {
@@ -741,13 +725,50 @@
             return bestPair;
         }
 
+        // ========== ADSGRAM + SPIN ==========
         function spinSlots() {
             if (isSpinning) return;
             isSpinning = true;
             const btn = document.getElementById('spinBtn');
             btn.style.opacity = '0.6';
-            btn.innerText = '🎰 SPINNING...';
+            btn.innerText = '📺 LOADING AD...';
             document.getElementById('congratsText').innerText = '';
+
+            // Tạo container cho Adsgram
+            const adContainer = document.createElement('div');
+            adContainer.id = 'adsgram-container';
+            adContainer.style.display = 'none';
+            document.body.appendChild(adContainer);
+
+            // Tạo adsgram-task element
+            const adTask = document.createElement('adsgram-task');
+            adTask.setAttribute('data-block-id', ADSGRAM_BLOCK_ID);
+            adContainer.appendChild(adTask);
+
+            // Callback khi xem xong quảng cáo
+            adTask.addEventListener('reward', () => {
+                adContainer.remove();
+                doSpin(btn);
+            });
+
+            // Callback khi lỗi
+            adTask.addEventListener('error', (e) => {
+                console.error('Adsgram error:', e);
+                adContainer.remove();
+                btn.style.opacity = '1';
+                btn.innerText = '🎰 SPIN & EARN';
+                isSpinning = false;
+                tg.showPopup({ message: '❌ Ad failed. Please try again.' });
+            });
+
+            // Trigger quảng cáo
+            setTimeout(() => {
+                adTask.click();
+            }, 300);
+        }
+
+        function doSpin(btn) {
+            btn.innerText = '🎰 SPINNING...';
             document.getElementById('slotResult').innerText = '?';
 
             const slot1 = document.getElementById('slot1');
@@ -774,12 +795,11 @@
 
                 cachedBalance += reward;
                 updateBalance(cachedBalance);
-                
+
                 let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
                 document.getElementById('adsWatched').innerText = watched;
                 document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`;
 
-                // Gửi reward lên server
                 claimReward(reward);
 
                 btn.style.opacity = '1';
@@ -877,7 +897,6 @@
                 cachedBalance -= amount;
                 updateBalance(cachedBalance);
                 localStorage.setItem('pcs_balance', cachedBalance);
-                
                 document.getElementById('confirmOverlay').classList.remove('show');
                 document.getElementById('withdraw-form').style.display = 'none';
                 document.getElementById('success-screen').classList.add('show');
