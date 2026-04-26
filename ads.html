@@ -83,7 +83,6 @@
             box-shadow: 0 4px 16px rgba(255,143,0,0.3);
         }
 
-        /* Withdraw Form */
         .withdraw-card {
             background: white;
             border-radius: 24px;
@@ -144,7 +143,6 @@
             font-size: 14px;
         }
 
-        /* Slots */
         .slots-container {
             background: white;
             border-radius: 24px;
@@ -184,14 +182,8 @@
             50% { transform: translateY(4px); }
             100% { transform: translateY(-4px); }
         }
-        .slot-op {
-            font-size: 24px;
-            color: #2e7d32;
-        }
-        .slot-eq {
-            font-size: 24px;
-            color: #43a047;
-        }
+        .slot-op { font-size: 24px; color: #2e7d32; }
+        .slot-eq { font-size: 24px; color: #43a047; }
         .slot-result {
             width: 80px;
             height: 70px;
@@ -213,7 +205,6 @@
             min-height: 24px;
         }
 
-        /* Odds display */
         .odds-info {
             display: flex;
             justify-content: center;
@@ -231,7 +222,6 @@
             font-weight: 600;
         }
 
-        /* Referral */
         .ref-card {
             background: white;
             border-radius: 24px;
@@ -267,7 +257,6 @@
         .ref-stat .num { font-size: 22px; font-weight: 800; color: #2e7d32; }
         .ref-stat .lbl { color: #66bb6a; font-size: 12px; }
 
-        /* About & Contact */
         .about-card {
             background: white;
             border-radius: 24px;
@@ -294,9 +283,7 @@
             padding-left: 20px;
             margin: 8px 0;
         }
-        .about-card ul li {
-            margin: 4px 0;
-        }
+        .about-card ul li { margin: 4px 0; }
         .contact-box {
             background: #f1f8e9;
             padding: 14px;
@@ -312,7 +299,6 @@
             font-size: 15px;
         }
 
-        /* Bottom Nav */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -342,11 +328,7 @@
         .nav-item.active { color: #2e7d32; }
         .nav-icon { font-size: 18px; display: block; margin-bottom: 2px; }
 
-        .info-row {
-            display: flex;
-            gap: 10px;
-            margin: 12px 0;
-        }
+        .info-row { display: flex; gap: 10px; margin: 12px 0; }
         .info-chip {
             flex: 1;
             background: white;
@@ -358,7 +340,6 @@
         .info-chip .val { color: #2e7d32; font-weight: 800; font-size: 16px; }
         .info-chip .lbl { color: #81c784; font-size: 11px; margin-top: 2px; }
 
-        /* Confirm */
         .confirm-overlay {
             display: none;
             position: fixed;
@@ -422,29 +403,18 @@
     <div class="tab-content active" id="tab-wallet">
         <div id="wallet-main">
             <div class="info-row">
-                <div class="info-chip">
-                    <div class="val">$1.00</div>
-                    <div class="lbl">Min Withdraw</div>
-                </div>
-                <div class="info-chip">
-                    <div class="val">24/7</div>
-                    <div class="lbl">Payout</div>
-                </div>
-                <div class="info-chip">
-                    <div class="val">Instant</div>
-                    <div class="lbl">Processing</div>
-                </div>
+                <div class="info-chip"><div class="val">$1.00</div><div class="lbl">Min Withdraw</div></div>
+                <div class="info-chip"><div class="val">24/7</div><div class="lbl">Payout</div></div>
+                <div class="info-chip"><div class="val">Instant</div><div class="lbl">Processing</div></div>
             </div>
             <button class="btn btn-green" onclick="showWithdrawForm()">💸 Withdraw Now</button>
             <button class="btn btn-outline" onclick="switchTab('ads')" style="margin-top:8px;">🎰 Earn More Coins</button>
         </div>
 
-        <!-- Withdraw Form -->
         <div id="withdraw-form" style="display:none;">
             <div class="withdraw-card">
                 <h3>💸 Withdraw Funds</h3>
                 <div class="rate-info">💡 100,000 Coins = $1.00</div>
-
                 <div class="form-group">
                     <label>Payment Method</label>
                     <select id="paymentMethod" onchange="updateMethod()">
@@ -453,13 +423,11 @@
                         <option value="faucetpay">FaucetPay</option>
                     </select>
                 </div>
-
                 <div class="form-group">
                     <label id="walletLabel">USDT Wallet Address (BEP20)</label>
                     <input type="text" id="walletAddress" placeholder="Enter your USDT BEP20 wallet address (0x...)">
-                    <div class="error-msg" id="walletError">Please enter a valid wallet address</div>
+                    <div class="error-msg" id="walletError"></div>
                 </div>
-
                 <div class="form-group">
                     <label>Amount (Coins)</label>
                     <input type="number" id="withdrawAmount" placeholder="Min: 100,000 coins" min="100000">
@@ -469,13 +437,11 @@
                     </div>
                     <div class="error-msg" id="amountError"></div>
                 </div>
-
                 <button class="btn btn-green" onclick="confirmWithdraw()">✅ Submit Withdrawal</button>
                 <button class="btn btn-outline" onclick="cancelWithdraw()" style="margin-top:6px;">← Back to Wallet</button>
             </div>
         </div>
 
-        <!-- Success -->
         <div class="success-screen" id="success-screen">
             <div class="icon">✅</div>
             <h3>Withdrawal Submitted!</h3>
@@ -484,12 +450,11 @@
         </div>
     </div>
 
-    <!-- Tab Earn - SLOTS -->
+    <!-- Tab Earn -->
     <div class="tab-content" id="tab-ads">
         <div class="slots-container">
             <p style="color:#66bb6a; font-weight:600; margin-bottom:5px;">🎰 SPIN & EARN</p>
             <p style="color:#81c784; font-size:13px; margin-bottom:12px;">Ads watched today: <span id="adsWatched" style="font-weight:700;">0</span></p>
-
             <div class="slot-row">
                 <div class="slot-box" id="slot1">?</div>
                 <span class="slot-op">×</span>
@@ -497,11 +462,8 @@
                 <span class="slot-eq">=</span>
                 <div class="slot-result" id="slotResult">?</div>
             </div>
-
             <p class="congrats-text" id="congratsText"></p>
             <button class="btn btn-gold" id="spinBtn" onclick="spinSlots()">🎰 SPIN & EARN</button>
-
-            <!-- Odds display -->
             <div class="odds-info">
                 <span class="odds-chip">10-60: 70%</span>
                 <span class="odds-chip">60-120: 20%</span>
@@ -517,50 +479,37 @@
         <div class="ref-card">
             <h3 style="color:#2e7d32;">👥 Invite Friends</h3>
             <p style="color:#66bb6a; margin:8px 0;">Earn 10% from referrals</p>
-            <div class="ref-link-box" id="refLink">https://t.me/PaidCashSupplierBot?start=ref123</div>
+            <div class="ref-link-box" id="refLink">Loading...</div>
             <button class="btn btn-green" onclick="copyRef()">📋 Copy Link</button>
             <div class="ref-stats">
-                <div class="ref-stat">
-                    <div class="num" id="refCount">0</div>
-                    <div class="lbl">Refs</div>
-                </div>
-                <div class="ref-stat">
-                    <div class="num" id="refEarnings">0</div>
-                    <div class="lbl">Earned</div>
-                </div>
+                <div class="ref-stat"><div class="num" id="refCount">0</div><div class="lbl">Refs</div></div>
+                <div class="ref-stat"><div class="num" id="refEarnings">0</div><div class="lbl">Earned</div></div>
             </div>
         </div>
     </div>
 
-    <!-- Tab About & Contact -->
+    <!-- Tab About -->
     <div class="tab-content" id="tab-about">
         <div class="about-card">
             <h3>📋 About & Contact Us</h3>
-
             <h4>📜 Terms of Service</h4>
             <ul>
                 <li>Users must be at least 18 years old to participate.</li>
-                <li>Any fraudulent activity, including but not limited to using bots, fake accounts, VPN abuse, or automated scripts, is strictly prohibited.</li>
-                <li>We reserve the right to suspend or permanently ban any account found violating our rules without prior notice.</li>
-                <li>Each user is allowed only one account. Multiple accounts will result in immediate termination.</li>
-                <li>All earnings are subject to review before withdrawal approval.</li>
+                <li>Any fraudulent activity is strictly prohibited.</li>
+                <li>We reserve the right to ban any account violating our rules.</li>
+                <li>Each user is allowed only one account.</li>
+                <li>All earnings are subject to review before withdrawal.</li>
             </ul>
-
             <h4>🚫 Prohibited Activities</h4>
             <ul>
-                <li>Using emulators or virtual machines to bypass ad viewing limits.</li>
-                <li>Spoofing IP addresses or using proxy/VPN to fake location.</li>
-                <li>Creating multiple Telegram accounts to claim referral bonuses fraudulently.</li>
-                <li>Exploiting bugs or glitches in the system and failing to report them.</li>
-                <li>Harassing, threatening, or abusing other users or administrators.</li>
+                <li>Using bots, emulators, or automated scripts.</li>
+                <li>VPN/proxy abuse to fake location.</li>
+                <li>Creating multiple accounts for referral fraud.</li>
+                <li>Exploiting system bugs.</li>
             </ul>
-
-            <h4>⚠️ Disclaimer</h4>
-            <p>Paid Cash Supplier is an independent platform. We are not affiliated with Telegram. Earnings depend on user activity and advertiser availability. We do not guarantee fixed income. Cryptocurrency values are volatile and may change.</p>
-
             <h4>📞 Contact Admin</h4>
             <div class="contact-box">
-                <p style="margin-bottom:6px;">For support, questions, or to report issues:</p>
+                <p style="margin-bottom:6px;">For support or questions:</p>
                 <a href="https://t.me/duytoiktol" target="_blank">💬 @duytoiktol</a>
             </div>
         </div>
@@ -601,7 +550,7 @@
         // ========== CONFIG ==========
         const API_URL = 'https://paid-cash-supplier-backend.onrender.com';
         const SUPABASE_URL = 'https://ctghldtpbmpibrxbldgn.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_L97Lx532FQ9nbwGbP4jT_A_wo_v5SR5'; // THAY BẰNG ANON KEY THẬT
+        const SUPABASE_ANON_KEY = 'sb_publishable_L97Lx532FQ9nbwGbP4jT_A_wo_v5SR5';
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const tg = window.Telegram.WebApp;
@@ -611,10 +560,21 @@
         let isSpinning = false;
         const tgUser = tg.initDataUnsafe?.user;
         const telegramId = tgUser?.id ? String(tgUser.id) : null;
+        
+        // Cache balance để giữ khi reload
+        let cachedBalance = 0;
 
         // ========== INIT USER ==========
         async function initUser() {
-            if (!telegramId) return;
+            if (!telegramId) {
+                // Nếu không có telegramId, thử lấy từ localStorage
+                const saved = localStorage.getItem('pcs_balance');
+                if (saved) {
+                    cachedBalance = parseInt(saved);
+                    updateBalance(cachedBalance);
+                }
+                return;
+            }
 
             const urlParams = new URLSearchParams(window.location.search);
             const refParam = urlParams.get('start') || '';
@@ -634,7 +594,15 @@
                 const data = await res.json();
 
                 if (data.user) {
-                    updateBalance(data.user.balance);
+                    // Lấy balance từ server - ĐÂY LÀ NGUỒN CHÍNH XÁC
+                    cachedBalance = data.user.balance;
+                    updateBalance(cachedBalance);
+                    
+                    // Lưu backup vào localStorage
+                    localStorage.setItem('pcs_balance', cachedBalance);
+                    localStorage.setItem('pcs_balance_time', Date.now());
+
+                    // Cập nhật ref link
                     document.getElementById('refLink').innerText =
                         `https://t.me/PaidCashSupplierBot?start=ref${data.user.ref_code}`;
                     document.getElementById('refCount').innerText = data.user.ref_count || 0;
@@ -643,12 +611,25 @@
                 }
             } catch (e) {
                 console.error('Init error:', e);
+                // Fallback: dùng balance từ localStorage
+                const saved = localStorage.getItem('pcs_balance');
+                if (saved) {
+                    cachedBalance = parseInt(saved);
+                    updateBalance(cachedBalance);
+                    tg.showPopup({ message: '⚠️ Using cached balance' });
+                }
             }
         }
 
         // ========== CLAIM REWARD ==========
         async function claimReward(reward) {
-            if (!telegramId) return;
+            if (!telegramId) {
+                // Offline: vẫn cập nhật UI tạm
+                cachedBalance += reward;
+                updateBalance(cachedBalance);
+                localStorage.setItem('pcs_balance', cachedBalance);
+                return;
+            }
 
             try {
                 const res = await fetch(`${API_URL}/api/user/update-balance`, {
@@ -661,16 +642,25 @@
                 });
                 const data = await res.json();
                 if (data.balance !== undefined) {
+                    cachedBalance = data.balance;
                     updateBalance(data.balance);
+                    localStorage.setItem('pcs_balance', data.balance);
                 }
             } catch (e) {
                 console.error('Claim error:', e);
+                // Vẫn cộng local nếu mất mạng
+                cachedBalance += reward;
+                updateBalance(cachedBalance);
+                localStorage.setItem('pcs_balance', cachedBalance);
             }
         }
 
         // ========== WITHDRAW API ==========
         async function submitWithdrawAPI(method, wallet, amount) {
-            if (!telegramId) return false;
+            if (!telegramId) {
+                tg.showPopup({ message: '❌ Cannot connect to server' });
+                return false;
+            }
 
             try {
                 const res = await fetch(`${API_URL}/api/withdraw`, {
@@ -693,6 +683,7 @@
                 }
             } catch (e) {
                 console.error('Withdraw error:', e);
+                tg.showPopup({ message: '❌ Network error. Try again.' });
                 return false;
             }
         }
@@ -781,8 +772,9 @@
                 slot2.innerText = b;
                 document.getElementById('slotResult').innerText = reward;
 
-                let bal = parseInt(document.getElementById('balance').innerText.replace(/,/g, '')) + reward;
-                updateBalance(bal);
+                cachedBalance += reward;
+                updateBalance(cachedBalance);
+                
                 let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
                 document.getElementById('adsWatched').innerText = watched;
                 document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`;
@@ -842,7 +834,7 @@
             const method = document.getElementById('paymentMethod').value;
             const wallet = document.getElementById('walletAddress').value.trim();
             const amount = parseInt(document.getElementById('withdrawAmount').value);
-            const balance = parseInt(document.getElementById('balance').innerText.replace(/,/g, ''));
+            const balance = cachedBalance;
             let valid = true;
 
             if (!wallet || wallet.length < 5) {
@@ -878,12 +870,14 @@
             const method = document.getElementById('paymentMethod').value;
             const wallet = document.getElementById('walletAddress').value.trim();
             const amount = parseInt(document.getElementById('withdrawAmount').value);
-            let balance = parseInt(document.getElementById('balance').innerText.replace(/,/g, ''));
 
             const success = await submitWithdrawAPI(method, wallet, amount);
 
             if (success) {
-                updateBalance(balance - amount);
+                cachedBalance -= amount;
+                updateBalance(cachedBalance);
+                localStorage.setItem('pcs_balance', cachedBalance);
+                
                 document.getElementById('confirmOverlay').classList.remove('show');
                 document.getElementById('withdraw-form').style.display = 'none';
                 document.getElementById('success-screen').classList.add('show');
