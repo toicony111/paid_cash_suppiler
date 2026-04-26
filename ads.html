@@ -18,7 +18,6 @@
             min-height: 100vh;
             padding-bottom: 90px;
         }
-
         .header {
             text-align: center;
             padding: 25px 20px 5px;
@@ -34,7 +33,6 @@
             font-weight: 500;
             margin-bottom: 15px;
         }
-
         .balance-card {
             background: white;
             margin: 10px 15px;
@@ -45,348 +43,156 @@
             border: 1px solid #c8e6c9;
         }
         .balance-label { color: #66bb6a; font-size: 13px; font-weight: 600; }
-        .balance-amount {
-            font-size: 44px;
-            font-weight: 800;
-            color: #2e7d32;
-        }
+        .balance-amount { font-size: 44px; font-weight: 800; color: #2e7d32; }
         .balance-usd { color: #81c784; font-size: 14px; margin-top: 5px; font-weight: 500; }
-
         .tab-content { display: none; padding: 15px; }
         .tab-content.active { display: block; }
-
         .btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 16px;
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: 0.2s;
+            width: 100%; padding: 16px; border: none; border-radius: 16px;
+            font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s;
         }
         .btn:active { transform: scale(0.96); }
-
-        .btn-green {
-            background: linear-gradient(135deg, #43a047, #2e7d32);
-            color: white;
-            box-shadow: 0 4px 16px rgba(46,125,50,0.25);
-        }
-        .btn-outline {
-            background: white;
-            border: 2px solid #43a047;
-            color: #2e7d32;
-        }
-        .btn-gold {
-            background: linear-gradient(135deg, #ffb300, #ff8f00);
-            color: #fff;
-            box-shadow: 0 4px 16px rgba(255,143,0,0.3);
-        }
-
+        .btn-green { background: linear-gradient(135deg, #43a047, #2e7d32); color: white; box-shadow: 0 4px 16px rgba(46,125,50,0.25); }
+        .btn-outline { background: white; border: 2px solid #43a047; color: #2e7d32; }
+        .btn-gold { background: linear-gradient(135deg, #ffb300, #ff8f00); color: #fff; box-shadow: 0 4px 16px rgba(255,143,0,0.3); }
         .withdraw-card {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
-            margin: 10px 0;
+            background: white; border-radius: 24px; padding: 24px; margin: 10px 0;
             box-shadow: 0 4px 24px rgba(46,125,50,0.1);
         }
-        .withdraw-card h3 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #2e7d32;
-            font-size: 20px;
-        }
+        .withdraw-card h3 { text-align: center; margin-bottom: 20px; color: #2e7d32; font-size: 20px; }
         .form-group { margin-bottom: 16px; }
-        .form-group label {
-            display: block;
-            color: #388e3c;
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
+        .form-group label { display: block; color: #388e3c; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
         .form-group select, .form-group input {
-            width: 100%;
-            padding: 14px 16px;
-            background: #f1f8e9;
-            border: 2px solid #c8e6c9;
-            border-radius: 14px;
-            color: #1b5e20;
-            font-size: 15px;
-            outline: none;
-            transition: 0.2s;
+            width: 100%; padding: 14px 16px; background: #f1f8e9; border: 2px solid #c8e6c9;
+            border-radius: 14px; color: #1b5e20; font-size: 15px; outline: none; transition: 0.2s;
         }
-        .form-group select:focus, .form-group input:focus {
-            border-color: #43a047;
-        }
-        .hint {
-            display: flex;
-            justify-content: space-between;
-            color: #81c784;
-            font-size: 12px;
-            margin-top: 4px;
-        }
-        .error-msg {
-            color: #e53935;
-            font-size: 12px;
-            margin-top: 4px;
-            display: none;
-            font-weight: 600;
-        }
+        .form-group select:focus, .form-group input:focus { border-color: #43a047; }
+        .hint { display: flex; justify-content: space-between; color: #81c784; font-size: 12px; margin-top: 4px; }
+        .error-msg { color: #e53935; font-size: 12px; margin-top: 4px; display: none; font-weight: 600; }
         .rate-info {
-            text-align: center;
-            background: #f1f8e9;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 16px;
-            color: #388e3c;
-            font-weight: 600;
-            font-size: 14px;
+            text-align: center; background: #f1f8e9; padding: 10px; border-radius: 10px;
+            margin-bottom: 16px; color: #388e3c; font-weight: 600; font-size: 14px;
         }
-
         .slots-container {
-            background: white;
-            border-radius: 24px;
-            padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 4px 24px rgba(46,125,50,0.1);
-            text-align: center;
+            background: white; border-radius: 24px; padding: 20px; margin: 15px 0;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center;
         }
         .slot-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin: 8px 0;
-            font-size: 28px;
-            font-weight: 800;
+            display: flex; justify-content: center; align-items: center;
+            gap: 12px; margin: 8px 0; font-size: 28px; font-weight: 800;
         }
         .slot-box {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #fff9c4, #fff176);
-            border: 3px solid #ffb300;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            color: #e65100;
-            box-shadow: 0 4px 12px rgba(255,179,0,0.2);
-            transition: 0.1s;
+            width: 70px; height: 70px; background: linear-gradient(135deg, #fff9c4, #fff176);
+            border: 3px solid #ffb300; border-radius: 16px; display: flex; align-items: center;
+            justify-content: center; font-size: 30px; color: #e65100;
+            box-shadow: 0 4px 12px rgba(255,179,0,0.2); transition: 0.1s;
         }
-        .slot-box.spinning {
-            animation: slotSpin 0.15s infinite;
-        }
+        .slot-box.spinning { animation: slotSpin 0.15s infinite; }
         @keyframes slotSpin {
-            0% { transform: translateY(-4px); }
-            50% { transform: translateY(4px); }
-            100% { transform: translateY(-4px); }
+            0% { transform: translateY(-4px); } 50% { transform: translateY(4px); } 100% { transform: translateY(-4px); }
         }
         .slot-op { font-size: 24px; color: #2e7d32; }
         .slot-eq { font-size: 24px; color: #43a047; }
         .slot-result {
-            width: 80px;
-            height: 70px;
-            background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
-            border: 3px solid #43a047;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: #1b5e20;
+            width: 80px; height: 70px; background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+            border: 3px solid #43a047; border-radius: 16px; display: flex; align-items: center;
+            justify-content: center; font-size: 28px; color: #1b5e20;
             box-shadow: 0 4px 12px rgba(46,125,50,0.2);
         }
-        .congrats-text {
-            color: #2e7d32;
-            font-weight: 700;
-            font-size: 16px;
-            margin-top: 8px;
-            min-height: 24px;
-        }
-
-        .odds-info {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-            font-size: 10px;
-            color: #81c784;
-        }
-        .odds-chip {
-            background: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            border: 1px solid #c8e6c9;
-            font-weight: 600;
-        }
-
+        .congrats-text { color: #2e7d32; font-weight: 700; font-size: 16px; margin-top: 8px; min-height: 24px; }
+        .odds-info { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; font-size: 10px; color: #81c784; }
+        .odds-chip { background: white; padding: 4px 10px; border-radius: 20px; border: 1px solid #c8e6c9; font-weight: 600; }
         .ref-card {
-            background: white;
-            border-radius: 24px;
-            padding: 20px;
-            margin: 10px 0;
-            box-shadow: 0 4px 24px rgba(46,125,50,0.1);
-            text-align: center;
+            background: white; border-radius: 24px; padding: 20px; margin: 10px 0;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center;
         }
         .ref-link-box {
-            background: #f1f8e9;
-            padding: 14px;
-            border-radius: 12px;
-            margin: 10px 0;
-            word-break: break-all;
-            font-size: 13px;
-            color: #2e7d32;
-            border: 2px dashed #81c784;
-            font-weight: 500;
+            background: #f1f8e9; padding: 14px; border-radius: 12px; margin: 10px 0;
+            word-break: break-all; font-size: 13px; color: #2e7d32; border: 2px dashed #81c784; font-weight: 500;
         }
-        .ref-stats {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 15px;
-            gap: 10px;
-        }
-        .ref-stat {
-            text-align: center;
-            background: #f1f8e9;
-            padding: 14px;
-            border-radius: 14px;
-            flex: 1;
-        }
+        .ref-stats { display: flex; justify-content: space-around; margin-top: 15px; gap: 10px; }
+        .ref-stat { text-align: center; background: #f1f8e9; padding: 14px; border-radius: 14px; flex: 1; }
         .ref-stat .num { font-size: 22px; font-weight: 800; color: #2e7d32; }
         .ref-stat .lbl { color: #66bb6a; font-size: 12px; }
-
         .about-card {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
-            margin: 10px 0;
+            background: white; border-radius: 24px; padding: 24px; margin: 10px 0;
             box-shadow: 0 4px 24px rgba(46,125,50,0.1);
         }
-        .about-card h3 {
-            color: #2e7d32;
-            margin-bottom: 16px;
-            font-size: 20px;
-        }
-        .about-card h4 {
-            color: #388e3c;
-            margin: 14px 0 6px;
-            font-size: 15px;
-        }
-        .about-card p, .about-card li {
-            color: #4a7c4f;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        .about-card ul {
-            padding-left: 20px;
-            margin: 8px 0;
-        }
+        .about-card h3 { color: #2e7d32; margin-bottom: 16px; font-size: 20px; }
+        .about-card h4 { color: #388e3c; margin: 14px 0 6px; font-size: 15px; }
+        .about-card p, .about-card li { color: #4a7c4f; font-size: 14px; line-height: 1.6; }
+        .about-card ul { padding-left: 20px; margin: 8px 0; }
         .about-card ul li { margin: 4px 0; }
         .contact-box {
-            background: #f1f8e9;
-            padding: 14px;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 16px;
-            border: 2px solid #c8e6c9;
+            background: #f1f8e9; padding: 14px; border-radius: 12px; text-align: center;
+            margin-top: 16px; border: 2px solid #c8e6c9;
         }
-        .contact-box a {
-            color: #2e7d32;
-            font-weight: 700;
-            text-decoration: none;
-            font-size: 15px;
-        }
-
+        .contact-box a { color: #2e7d32; font-weight: 700; text-decoration: none; font-size: 15px; }
         .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            background: white;
-            border-top: 1px solid #c8e6c9;
-            z-index: 10;
-            box-shadow: 0 -2px 16px rgba(0,0,0,0.05);
-            overflow-x: auto;
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 500px; display: flex; background: white;
+            border-top: 1px solid #c8e6c9; z-index: 10;
+            box-shadow: 0 -2px 16px rgba(0,0,0,0.05); overflow-x: auto;
         }
         .nav-item {
-            flex: 1;
-            min-width: 70px;
-            padding: 12px 8px;
-            text-align: center;
-            cursor: pointer;
-            color: #81c784;
-            font-size: 11px;
-            font-weight: 600;
-            transition: 0.2s;
-            white-space: nowrap;
+            flex: 1; min-width: 70px; padding: 12px 8px; text-align: center;
+            cursor: pointer; color: #81c784; font-size: 11px; font-weight: 600;
+            transition: 0.2s; white-space: nowrap;
         }
         .nav-item.active { color: #2e7d32; }
         .nav-icon { font-size: 18px; display: block; margin-bottom: 2px; }
-
         .info-row { display: flex; gap: 10px; margin: 12px 0; }
         .info-chip {
-            flex: 1;
-            background: white;
-            padding: 14px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 2px 12px rgba(46,125,50,0.08);
+            flex: 1; background: white; padding: 14px; border-radius: 16px;
+            text-align: center; box-shadow: 0 2px 12px rgba(46,125,50,0.08);
         }
         .info-chip .val { color: #2e7d32; font-weight: 800; font-size: 16px; }
         .info-chip .lbl { color: #81c784; font-size: 11px; margin-top: 2px; }
-
         .confirm-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(27,94,32,0.5);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(27,94,32,0.5); z-index: 100; justify-content: center; align-items: center;
         }
         .confirm-overlay.show { display: flex; }
         .confirm-box {
-            background: white;
-            padding: 24px;
-            border-radius: 24px;
-            width: 90%;
-            max-width: 360px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
-            text-align: center;
+            background: white; padding: 24px; border-radius: 24px; width: 90%;
+            max-width: 360px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); text-align: center;
         }
         .confirm-box p { margin: 6px 0; color: #388e3c; font-size: 14px; }
         .confirm-box .confirm-val { color: #1b5e20; font-weight: 700; }
         .confirm-btns { display: flex; gap: 10px; margin-top: 18px; }
-        .confirm-btns button {
-            flex: 1;
-            padding: 14px;
-            border-radius: 14px;
-            border: none;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-        }
+        .confirm-btns button { flex: 1; padding: 14px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; }
         .btn-cancel { background: #e8f5e9; color: #2e7d32; }
         .btn-confirm { background: #43a047; color: white; }
-
         .success-screen {
-            display: none;
-            text-align: center;
-            padding: 30px 20px;
-            background: white;
-            border-radius: 24px;
-            margin-top: 10px;
+            display: none; text-align: center; padding: 30px 20px; background: white;
+            border-radius: 24px; margin-top: 10px;
         }
         .success-screen.show { display: block; }
         .success-screen .icon { font-size: 50px; margin-bottom: 12px; }
         .success-screen h3 { color: #2e7d32; margin-bottom: 6px; }
         .success-screen p { color: #66bb6a; font-size: 14px; }
+
+        /* Withdraw History */
+        .history-card {
+            background: white; border-radius: 24px; padding: 18px; margin: 12px 0;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.1);
+        }
+        .history-card h4 { color: #2e7d32; margin-bottom: 12px; }
+        .history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; border-bottom: 1px solid #e8f5e9;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-info .method { font-weight: 700; color: #2e7d32; font-size: 14px; }
+        .history-info .date { font-size: 11px; color: #81c784; }
+        .history-amount { font-weight: 700; font-size: 16px; }
+        .status {
+            padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+        }
+        .status-pending { background: #fff9c4; color: #e65100; }
+        .status-completed { background: #c8e6c9; color: #2e7d32; }
+        .status-rejected { background: #ffcdd2; color: #c62828; }
+        .no-data { text-align: center; color: #81c784; padding: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -409,7 +215,7 @@
                 <div class="info-chip"><div class="val">Instant</div><div class="lbl">Processing</div></div>
             </div>
             <button class="btn btn-green" onclick="showWithdrawForm()">💸 Withdraw Now</button>
-            <button class="btn btn-outline" onclick="switchTab('ads')" style="margin-top:8px;">🎰 Earn More Coins</button>
+            <button class="btn btn-outline" onclick="loadWithdrawHistory(); switchTab('history');" style="margin-top:8px;">📋 Withdraw History</button>
         </div>
 
         <div id="withdraw-form" style="display:none;">
@@ -432,10 +238,7 @@
                 <div class="form-group">
                     <label>Amount (Coins)</label>
                     <input type="number" id="withdrawAmount" placeholder="Min: 100,000 coins" min="100000">
-                    <div class="hint">
-                        <span>Min: 100,000 coins ($1.00)</span>
-                        <span>Balance: <span id="formBalance">0</span> coins</span>
-                    </div>
+                    <div class="hint"><span>Min: 100,000 coins ($1.00)</span><span>Balance: <span id="formBalance">0</span> coins</span></div>
                     <div class="error-msg" id="amountError"></div>
                 </div>
                 <button class="btn btn-green" onclick="confirmWithdraw()">✅ Submit Withdrawal</button>
@@ -449,6 +252,15 @@
             <p>Your request will be processed within 24 hours.</p>
             <button class="btn btn-green" onclick="backToWallet()" style="margin-top:16px;">← Back to Wallet</button>
         </div>
+    </div>
+
+    <!-- Tab History -->
+    <div class="tab-content" id="tab-history">
+        <div class="history-card">
+            <h4>📋 Withdraw History</h4>
+            <div id="historyList"><div class="no-data">Loading...</div></div>
+        </div>
+        <button class="btn btn-outline" onclick="switchTab('wallet')">← Back to Wallet</button>
     </div>
 
     <!-- Tab Earn -->
@@ -548,7 +360,6 @@
     </div>
 
     <script>
-        // ========== CONFIG ==========
         const API_URL = 'https://paid-cash-supplier-backend.onrender.com';
         const SUPABASE_URL = 'https://ctghldtpbmpibrxbldgn.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_L97Lx532FQ9nbwGbP4jT_A_wo_v5SR5';
@@ -564,115 +375,89 @@
         const telegramId = tgUser?.id ? String(tgUser.id) : null;
         let cachedBalance = 0;
 
-        // ========== INIT USER ==========
+        // ========== INIT ==========
         async function initUser() {
             if (!telegramId) {
                 const saved = localStorage.getItem('pcs_balance');
-                if (saved) {
-                    cachedBalance = parseInt(saved);
-                    updateBalance(cachedBalance);
-                }
+                if (saved) { cachedBalance = parseInt(saved); updateBalance(cachedBalance); }
                 return;
             }
-
             const urlParams = new URLSearchParams(window.location.search);
             const refParam = urlParams.get('start') || '';
             const referredBy = refParam.replace('ref', '');
-
             try {
                 const res = await fetch(`${API_URL}/api/user/create`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        telegram_id: telegramId,
-                        username: tgUser?.username || '',
-                        first_name: tgUser?.first_name || 'User',
-                        referred_by: referredBy || null
-                    })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: telegramId, username: tgUser?.username || '', first_name: tgUser?.first_name || 'User', referred_by: referredBy || null })
                 });
                 const data = await res.json();
-
                 if (data.user) {
                     cachedBalance = data.user.balance;
                     updateBalance(cachedBalance);
                     localStorage.setItem('pcs_balance', cachedBalance);
-
-                    document.getElementById('refLink').innerText =
-                        `https://t.me/PaidCashSupplierBot?start=ref${data.user.ref_code}`;
+                    document.getElementById('refLink').innerText = `https://t.me/PaidCashSupplierBot?start=ref${data.user.ref_code}`;
                     document.getElementById('refCount').innerText = data.user.ref_count || 0;
                     document.getElementById('refEarnings').innerText = data.user.ref_earnings || 0;
                     document.getElementById('adsWatched').innerText = data.user.ads_watched || 0;
                 }
-            } catch (e) {
-                console.error('Init error:', e);
-                const saved = localStorage.getItem('pcs_balance');
-                if (saved) {
-                    cachedBalance = parseInt(saved);
-                    updateBalance(cachedBalance);
-                }
-            }
+            } catch (e) { console.error('Init error:', e); }
         }
 
-        // ========== CLAIM REWARD ==========
         async function claimReward(reward) {
-            if (!telegramId) {
-                cachedBalance += reward;
-                updateBalance(cachedBalance);
-                localStorage.setItem('pcs_balance', cachedBalance);
-                return;
-            }
+            if (!telegramId) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); return; }
             try {
                 const res = await fetch(`${API_URL}/api/user/update-balance`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ telegram_id: telegramId, reward: reward })
                 });
                 const data = await res.json();
-                if (data.balance !== undefined) {
-                    cachedBalance = data.balance;
-                    updateBalance(data.balance);
-                    localStorage.setItem('pcs_balance', data.balance);
-                }
-            } catch (e) {
-                console.error('Claim error:', e);
-                cachedBalance += reward;
-                updateBalance(cachedBalance);
-                localStorage.setItem('pcs_balance', cachedBalance);
-            }
+                if (data.balance !== undefined) { cachedBalance = data.balance; updateBalance(data.balance); localStorage.setItem('pcs_balance', data.balance); }
+            } catch (e) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); }
         }
 
-        // ========== WITHDRAW API ==========
         async function submitWithdrawAPI(method, wallet, amount) {
-            if (!telegramId) {
-                tg.showPopup({ message: '❌ Cannot connect to server' });
-                return false;
-            }
+            if (!telegramId) { tg.showPopup({ message: '❌ Cannot connect' }); return false; }
             try {
                 const res = await fetch(`${API_URL}/api/withdraw`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        telegram_id: telegramId, method: method,
-                        wallet_address: wallet, amount: amount
-                    })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: telegramId, method, wallet_address: wallet, amount })
                 });
                 const data = await res.json();
-                if (data.error) {
-                    tg.showPopup({ message: '❌ ' + data.error });
-                    return false;
-                }
+                if (data.error) { tg.showPopup({ message: '❌ ' + data.error }); return false; }
                 return true;
-            } catch (e) {
-                tg.showPopup({ message: '❌ Network error' });
-                return false;
-            }
+            } catch (e) { tg.showPopup({ message: '❌ Network error' }); return false; }
+        }
+
+        async function loadWithdrawHistory() {
+            if (!telegramId) { document.getElementById('historyList').innerHTML = '<div class="no-data">Please login first</div>'; return; }
+            try {
+                const res = await fetch(`${API_URL}/api/withdrawals/${telegramId}`);
+                const data = await res.json();
+                if (data.length === 0) { document.getElementById('historyList').innerHTML = '<div class="no-data">No withdrawals yet</div>'; return; }
+                let html = '';
+                data.forEach(w => {
+                    const date = new Date(w.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    html += `<div class="history-item">
+                        <div class="history-info">
+                            <div class="method">${w.method.toUpperCase()} → ${w.wallet_address ? w.wallet_address.substring(0,10)+'...' : 'N/A'}</div>
+                            <div class="date">${date}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="history-amount" style="color:#e65100;">-${w.amount.toLocaleString()}</div>
+                            <span class="status status-${w.status}">${w.status}</span>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('historyList').innerHTML = html;
+            } catch (e) { document.getElementById('historyList').innerHTML = '<div class="no-data">Error loading history</div>'; }
         }
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            const nav = document.querySelector(`[data-tab="${tab}"]`);
+            if (nav) nav.classList.add('active');
             if (tab === 'wallet') {
                 document.getElementById('wallet-main').style.display = 'block';
                 document.getElementById('withdraw-form').style.display = 'none';
@@ -680,11 +465,7 @@
             }
         }
 
-        function copyRef() {
-            navigator.clipboard.writeText(document.getElementById('refLink').innerText);
-            tg.showPopup({ message: '✅ Link copied!' });
-        }
-
+        function copyRef() { navigator.clipboard.writeText(document.getElementById('refLink').innerText); tg.showPopup({ message: '✅ Link copied!' }); }
         function updateBalance(newBal) {
             document.getElementById('balance').innerText = newBal.toLocaleString();
             document.getElementById('balanceUsd').innerText = (newBal / 100000).toFixed(2);
@@ -692,30 +473,70 @@
         }
 
         function getRandomReward() {
-            const rand = Math.random() * 100;
-            if (rand < 70) return Math.floor(Math.random() * 51) + 10;
-            if (rand < 90) return Math.floor(Math.random() * 61) + 60;
-            if (rand < 96) return Math.floor(Math.random() * 31) + 120;
-            if (rand < 99) return Math.floor(Math.random() * 31) + 150;
+            const r = Math.random() * 100;
+            if (r < 70) return Math.floor(Math.random() * 51) + 10;
+            if (r < 90) return Math.floor(Math.random() * 61) + 60;
+            if (r < 96) return Math.floor(Math.random() * 31) + 120;
+            if (r < 99) return Math.floor(Math.random() * 31) + 150;
             return Math.floor(Math.random() * 21) + 180;
         }
 
         function findFactors(target) {
             const pairs = [];
-            for (let a = 1; a <= 20; a++)
-                for (let b = 1; b <= 10; b++)
-                    if (a * b === target) pairs.push([a, b]);
+            for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) if (a * b === target) pairs.push([a, b]);
             if (pairs.length > 0) return pairs[Math.floor(Math.random() * pairs.length)];
             let best = [1, 1], bestDiff = Infinity;
-            for (let a = 1; a <= 20; a++)
-                for (let b = 1; b <= 10; b++) {
-                    const d = Math.abs(a * b - target);
-                    if (d < bestDiff) { bestDiff = d; best = [a, b]; }
-                }
+            for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) {
+                const d = Math.abs(a * b - target);
+                if (d < bestDiff) { bestDiff = d; best = [a, b]; }
+            }
             return best;
         }
 
-        // ========== SPIN (có Adsgram fallback) ==========
+        // ========== SPIN + ADSGRAM ==========
+        function showAdsgramThenSpin(btn) {
+            // Tạo container ẩn
+            const container = document.createElement('div');
+            container.style.display = 'none';
+            document.body.appendChild(container);
+            
+            // Tạo adsgram-task element
+            const task = document.createElement('adsgram-task');
+            task.setAttribute('data-block-id', ADSGRAM_BLOCK_ID);
+            container.appendChild(task);
+            
+            // Timeout nếu quảng cáo không load sau 10s
+            const timeout = setTimeout(() => {
+                console.log('Ad timeout, spinning anyway');
+                container.remove();
+                doSpin(btn);
+            }, 10000);
+            
+            // Callback khi xem xong quảng cáo
+            task.addEventListener('reward', () => {
+                clearTimeout(timeout);
+                container.remove();
+                doSpin(btn);
+            });
+            
+            // Callback khi lỗi
+            task.addEventListener('error', (e) => {
+                clearTimeout(timeout);
+                console.log('Ad error, spinning anyway:', e);
+                container.remove();
+                doSpin(btn);
+            });
+            
+            // Trigger quảng cáo
+            setTimeout(() => {
+                try { task.click(); } catch(e) {
+                    clearTimeout(timeout);
+                    container.remove();
+                    doSpin(btn);
+                }
+            }, 200);
+        }
+
         function spinSlots() {
             if (isSpinning) return;
             isSpinning = true;
@@ -723,63 +544,31 @@
             btn.style.opacity = '0.6';
             btn.innerText = '📺 LOADING AD...';
             document.getElementById('congratsText').innerText = '';
-
-            // Thử dùng Adsgram API mới
-            if (typeof Adsgram !== 'undefined') {
-                try {
-                    const adsgram = new Adsgram({ blockId: ADSGRAM_BLOCK_ID });
-                    adsgram.show()
-                        .then(() => {
-                            doSpin(btn);
-                        })
-                        .catch((err) => {
-                            console.log('Ad skipped/error, spinning anyway:', err);
-                            doSpin(btn);
-                        });
-                } catch (e) {
-                    console.log('Adsgram error, spinning anyway:', e);
-                    doSpin(btn);
-                }
-            } else {
-                // SDK chưa load, spin luôn
-                console.log('Adsgram SDK not loaded, spinning directly');
-                doSpin(btn);
-            }
+            showAdsgramThenSpin(btn);
         }
 
         function doSpin(btn) {
             btn.innerText = '🎰 SPINNING...';
             document.getElementById('slotResult').innerText = '?';
-
-            const s1 = document.getElementById('slot1');
-            const s2 = document.getElementById('slot2');
-            s1.classList.add('spinning');
-            s2.classList.add('spinning');
-
+            const s1 = document.getElementById('slot1'), s2 = document.getElementById('slot2');
+            s1.classList.add('spinning'); s2.classList.add('spinning');
             const interval = setInterval(() => {
                 s1.innerText = Math.floor(Math.random() * 20) + 1;
                 s2.innerText = Math.floor(Math.random() * 10) + 1;
             }, 100);
-
             setTimeout(() => {
                 clearInterval(interval);
-                s1.classList.remove('spinning');
-                s2.classList.remove('spinning');
-
+                s1.classList.remove('spinning'); s2.classList.remove('spinning');
                 const reward = getRandomReward();
                 const [a, b] = findFactors(reward);
-                s1.innerText = a;
-                s2.innerText = b;
+                s1.innerText = a; s2.innerText = b;
                 document.getElementById('slotResult').innerText = reward;
-
                 cachedBalance += reward;
                 updateBalance(cachedBalance);
                 document.getElementById('adsWatched').innerText = parseInt(document.getElementById('adsWatched').innerText) + 1;
                 document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`;
                 claimReward(reward);
-
-                btn.style.opacity = '1';
-                btn.innerText = '🎰 SPIN & EARN';
+                btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN';
                 isSpinning = false;
             }, 2000);
         }
@@ -789,8 +578,7 @@
             document.getElementById('wallet-main').style.display = 'none';
             document.getElementById('withdraw-form').style.display = 'block';
             document.getElementById('success-screen').classList.remove('show');
-            updateMethod();
-            clearErrors();
+            updateMethod(); clearErrors();
         }
 
         function cancelWithdraw() {
@@ -809,13 +597,8 @@
             const m = document.getElementById('paymentMethod').value;
             const l = document.getElementById('walletLabel');
             const i = document.getElementById('walletAddress');
-            if (m === 'usdt') {
-                l.innerText = 'USDT Wallet Address (BEP20)';
-                i.placeholder = 'Enter your USDT BEP20 address (0x...)';
-            } else {
-                l.innerText = m === 'paypal' ? 'PayPal Email Address' : 'FaucetPay Email Address';
-                i.placeholder = m === 'paypal' ? 'Enter your PayPal email' : 'Enter your FaucetPay email';
-            }
+            if (m === 'usdt') { l.innerText = 'USDT Wallet Address (BEP20)'; i.placeholder = 'Enter your USDT BEP20 address (0x...)'; }
+            else { l.innerText = m === 'paypal' ? 'PayPal Email Address' : 'FaucetPay Email Address'; i.placeholder = m === 'paypal' ? 'Enter your PayPal email' : 'Enter your FaucetPay email'; }
         }
 
         function clearErrors() {
@@ -834,19 +617,16 @@
             if (!w || w.length < 5) {
                 document.getElementById('walletError').innerText = m === 'usdt' ? 'Enter valid BEP20 address' : 'Enter valid email';
                 document.getElementById('walletError').style.display = 'block';
-                document.getElementById('walletAddress').style.borderColor = '#e53935';
-                ok = false;
+                document.getElementById('walletAddress').style.borderColor = '#e53935'; ok = false;
             }
             if (!a || a < 100000) {
                 document.getElementById('amountError').innerText = 'Min 100,000 coins ($1.00)';
                 document.getElementById('amountError').style.display = 'block';
-                document.getElementById('withdrawAmount').style.borderColor = '#e53935';
-                ok = false;
+                document.getElementById('withdrawAmount').style.borderColor = '#e53935'; ok = false;
             } else if (a > cachedBalance) {
                 document.getElementById('amountError').innerText = 'Insufficient coins! Earn more in "Earn" tab.';
                 document.getElementById('amountError').style.display = 'block';
-                document.getElementById('withdrawAmount').style.borderColor = '#e53935';
-                ok = false;
+                document.getElementById('withdrawAmount').style.borderColor = '#e53935'; ok = false;
             }
             if (!ok) return;
             document.getElementById('confirmMethod').innerText = m.toUpperCase();
@@ -863,17 +643,14 @@
             const a = parseInt(document.getElementById('withdrawAmount').value);
             const ok = await submitWithdrawAPI(m, w, a);
             if (ok) {
-                cachedBalance -= a;
-                updateBalance(cachedBalance);
+                cachedBalance -= a; updateBalance(cachedBalance);
                 localStorage.setItem('pcs_balance', cachedBalance);
                 document.getElementById('confirmOverlay').classList.remove('show');
                 document.getElementById('withdraw-form').style.display = 'none';
                 document.getElementById('success-screen').classList.add('show');
                 document.getElementById('walletAddress').value = '';
                 document.getElementById('withdrawAmount').value = '';
-            } else {
-                document.getElementById('confirmOverlay').classList.remove('show');
-            }
+            } else { document.getElementById('confirmOverlay').classList.remove('show'); }
         }
 
         initUser();
