@@ -5,97 +5,232 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coin Simple</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #1a1a2e;
+            font-family: -apple-system, sans-serif;
+            background: #0d1117;
             color: white;
-            padding: 15px;
             max-width: 500px;
             margin: 0 auto;
+            min-height: 100vh;
+            padding-bottom: 80px;
         }
+
+        /* Header */
         .header {
             text-align: center;
-            font-size: 28px;
+            padding: 20px;
+            font-size: 24px;
             font-weight: bold;
             color: #ffd700;
-            margin: 20px 0;
         }
-        .users-count {
-            text-align: center;
-            color: #aaa;
-            margin-bottom: 20px;
-        }
-        .card {
-            background: linear-gradient(135deg, #16213e, #0f3460);
-            border-radius: 15px;
+        .balance-card {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            margin: 10px 15px;
             padding: 20px;
-            margin: 15px 0;
+            border-radius: 15px;
             text-align: center;
+            border: 1px solid #333;
         }
-        .card h2 { color: #ffd700; margin-bottom: 15px; }
-        .features { text-align: left; margin: 15px 0; line-height: 1.8; }
-        .features li { list-style: none; padding-left: 20px; position: relative; }
-        .features li::before { content: "•"; color: #ffd700; position: absolute; left: 0; }
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
+        .balance-amount {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .balance-usd {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* Tab Content */
+        .tab-content { display: none; padding: 15px; }
+        .tab-content.active { display: block; }
+
+        /* Watch Ads */
+        .ads-left {
+            text-align: center;
+            color: #888;
             margin: 10px 0;
+        }
+        .watch-btn {
+            width: 100%;
+            padding: 18px;
+            background: #ffd700;
+            color: #0d1117;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 12px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Referral */
+        .ref-card {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+            text-align: center;
+            border: 1px solid #333;
+        }
+        .ref-link-box {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-size: 13px;
+            color: #ffd700;
+            border: 1px dashed #ffd700;
+        }
+        .copy-btn {
+            background: #ffd700;
+            color: #0d1117;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .ref-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+        .ref-stat {
             text-align: center;
         }
-        .btn-gold { background: #ffd700; color: #1a1a2e; }
-        .btn-blue { background: #0f3460; color: white; border: 1px solid #ffd700; }
-        .btn-teal { background: #00b4d8; color: white; }
+        .ref-stat .num {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            background: #1a1a2e;
+            border-top: 1px solid #333;
+        }
+        .nav-item {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            color: #888;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .nav-item.active {
+            color: #ffd700;
+            border-top: 2px solid #ffd700;
+        }
+        .nav-icon { font-size: 20px; display: block; }
     </style>
 </head>
 <body>
+
     <div class="header">Coin Simple 🪙</div>
-    <div class="users-count">👥 1,448 users</div>
-
-    <div class="card">
-        <h2>Welcome to CoinSimple 🎉</h2>
-        <p>Earn Crypto Litecoin/Polygon/Faucetpay or Dana Rupiah on Telegram</p>
+    <div class="balance-card">
+        <div style="color:#aaa; font-size:14px;">💰 Balance</div>
+        <div class="balance-amount" id="balance">0</div>
+        <div class="balance-usd">Coins = $<span id="balanceUsd">0.00</span></div>
     </div>
 
-    <div class="card">
-        <h2>Bot Features</h2>
-        <ul class="features">
-            <li>Claim Unlimited Money by Watching Simple Ads</li>
-            <li>Rewards Per Claim $0.00024 or Rp4 or 436 LTC</li>
-            <li>Withdraw Very Low Only $0.03 or Rp500 or 56000 Litecoin</li>
-            <li>Payment to Litecoin/Polygon Direct Wallet or DANA Indonesia or Faucetpay Litecoin</li>
-            <li>Payment Process Fast Hourly 24/7</li>
-            <li>Unlimited Ads Everyday Earn As Much As You Want</li>
-        </ul>
-        <p style="margin-top:10px; font-style:italic;">Click Start Claim Unlimited Below to Start Earn</p>
+    <!-- Tab Wallet -->
+    <div class="tab-content active" id="tab-wallet">
+        <div style="text-align:center; color:#888; margin:20px 0;">
+            <p>Total Payouts: <span style="color:#ffd700;">0 Coins</span></p>
+            <p style="margin-top:10px;">Min Withdraw: 3000 Coins</p>
+        </div>
+        <button class="watch-btn" style="background:#00b4d8; margin-top:20px;" onclick="alert('Coming soon')">Withdraw</button>
     </div>
 
-    <button class="btn btn-gold" id="startClaim">🚀 Start Claim Unlimited</button>
-    <button class="btn btn-blue" id="faucetPartner">🤝 FaucetSimple (Partner)</button>
-    <button class="btn btn-teal" id="joinGroup">📢 Join Payment Group</button>
+    <!-- Tab Watch Ads -->
+    <div class="tab-content" id="tab-ads">
+        <div class="ads-left">📺 Ads watched today: <span id="adsWatched">0</span></div>
+        <div class="ads-left">+24 Coins per ad</div>
+        <adsgram-task 
+            id="adsgram" 
+            data-block-id="YOUR_BLOCK_ID"
+            data-debug="false">
+        </adsgram-task>
+        <button class="watch-btn" id="watchAdBtn">▶ Watch Ads +24 Coins</button>
+    </div>
+
+    <!-- Tab Referral -->
+    <div class="tab-content" id="tab-ref">
+        <div class="ref-card">
+            <h3>👥 Invite Friends</h3>
+            <p style="color:#888; margin:10px 0;">Earn 10% from ref earnings</p>
+            <div class="ref-link-box" id="refLink">https://t.me/coinsimplebot?start=ref123</div>
+            <button class="copy-btn" onclick="copyRef()">📋 Copy Link</button>
+            <div class="ref-stats">
+                <div class="ref-stat">
+                    <div class="num" id="refCount">0</div>
+                    <div style="color:#888;">Refs</div>
+                </div>
+                <div class="ref-stat">
+                    <div class="num" id="refEarnings">0</div>
+                    <div style="color:#888;">Earned</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-tab="wallet" onclick="switchTab('wallet')">
+            <span class="nav-icon">💳</span> Wallet
+        </div>
+        <div class="nav-item" data-tab="ads" onclick="switchTab('ads')">
+            <span class="nav-icon">📺</span> Watch Ads
+        </div>
+        <div class="nav-item" data-tab="ref" onclick="switchTab('ref')">
+            <span class="nav-icon">👥</span> Referral
+        </div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
-        tg.expand(); // Full màn hình
+        tg.expand();
 
-        document.getElementById('startClaim').onclick = () => {
-            tg.sendData(JSON.stringify({ action: 'start_claim' }));
-        };
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        }
 
-        document.getElementById('faucetPartner').onclick = () => {
-            tg.openTelegramLink('https://t.me/FaucetSimpleBot');
-        };
+        function copyRef() {
+            navigator.clipboard.writeText(document.getElementById('refLink').innerText);
+            tg.showPopup({ message: 'Link copied!' });
+        }
 
-        document.getElementById('joinGroup').onclick = () => {
-            tg.openTelegramLink('https://t.me/your-group'); // Thay link group của bạn
+        // Adsgram reward
+        const adEl = document.getElementById('adsgram');
+        adEl.addEventListener('reward', () => {
+            let bal = parseInt(document.getElementById('balance').innerText) + 24;
+            document.getElementById('balance').innerText = bal;
+            document.getElementById('balanceUsd').innerText = (bal * 0.00001).toFixed(4);
+            let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
+            document.getElementById('adsWatched').innerText = watched;
+            tg.showPopup({ message: '+24 Coins earned!' });
+        });
+
+        document.getElementById('watchAdBtn').onclick = () => {
+            document.getElementById('adsgram').click();
         };
     </script>
 </body>
