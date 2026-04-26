@@ -14,7 +14,7 @@
             max-width: 500px;
             margin: 0 auto;
             min-height: 100vh;
-            padding-bottom: 80px;
+            padding-bottom: 90px;
         }
 
         .header {
@@ -248,6 +248,51 @@
         .ref-stat .num { font-size: 22px; font-weight: 800; color: #2e7d32; }
         .ref-stat .lbl { color: #66bb6a; font-size: 12px; }
 
+        /* About & Contact */
+        .about-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            margin: 10px 0;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.1);
+        }
+        .about-card h3 {
+            color: #2e7d32;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        .about-card h4 {
+            color: #388e3c;
+            margin: 14px 0 6px;
+            font-size: 15px;
+        }
+        .about-card p, .about-card li {
+            color: #4a7c4f;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .about-card ul {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        .about-card ul li {
+            margin: 4px 0;
+        }
+        .contact-box {
+            background: #f1f8e9;
+            padding: 14px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 16px;
+            border: 2px solid #c8e6c9;
+        }
+        .contact-box a {
+            color: #2e7d32;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
         /* Bottom Nav */
         .bottom-nav {
             position: fixed;
@@ -261,19 +306,22 @@
             border-top: 1px solid #c8e6c9;
             z-index: 10;
             box-shadow: 0 -2px 16px rgba(0,0,0,0.05);
+            overflow-x: auto;
         }
         .nav-item {
             flex: 1;
-            padding: 14px;
+            min-width: 70px;
+            padding: 12px 8px;
             text-align: center;
             cursor: pointer;
             color: #81c784;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             transition: 0.2s;
+            white-space: nowrap;
         }
         .nav-item.active { color: #2e7d32; }
-        .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+        .nav-icon { font-size: 18px; display: block; margin-bottom: 2px; }
 
         .info-row {
             display: flex;
@@ -369,7 +417,7 @@
                 </div>
             </div>
             <button class="btn btn-green" onclick="showWithdrawForm()">💸 Withdraw Now</button>
-            <button class="btn btn-outline" onclick="switchTab('ads')" style="margin-top:8px;">📺 Earn More Coins</button>
+            <button class="btn btn-outline" onclick="switchTab('ads')" style="margin-top:8px;">🎰 Earn More Coins</button>
         </div>
 
         <!-- Withdraw Form -->
@@ -417,7 +465,7 @@
         </div>
     </div>
 
-    <!-- Tab Watch Ads - SLOTS -->
+    <!-- Tab Earn - SLOTS -->
     <div class="tab-content" id="tab-ads">
         <div class="slots-container">
             <p style="color:#66bb6a; font-weight:600; margin-bottom:5px;">🎰 SPIN & EARN</p>
@@ -457,6 +505,40 @@
         </div>
     </div>
 
+    <!-- Tab About & Contact -->
+    <div class="tab-content" id="tab-about">
+        <div class="about-card">
+            <h3>📋 About & Contact Us</h3>
+
+            <h4>📜 Terms of Service</h4>
+            <ul>
+                <li>Users must be at least 18 years old to participate.</li>
+                <li>Any fraudulent activity, including but not limited to using bots, fake accounts, VPN abuse, or automated scripts, is strictly prohibited.</li>
+                <li>We reserve the right to suspend or permanently ban any account found violating our rules without prior notice.</li>
+                <li>Each user is allowed only one account. Multiple accounts will result in immediate termination.</li>
+                <li>All earnings are subject to review before withdrawal approval.</li>
+            </ul>
+
+            <h4>🚫 Prohibited Activities</h4>
+            <ul>
+                <li>Using emulators or virtual machines to bypass ad viewing limits.</li>
+                <li>Spoofing IP addresses or using proxy/VPN to fake location.</li>
+                <li>Creating multiple Telegram accounts to claim referral bonuses fraudulently.</li>
+                <li>Exploiting bugs or glitches in the system and failing to report them.</li>
+                <li>Harassing, threatening, or abusing other users or administrators.</li>
+            </ul>
+
+            <h4>⚠️ Disclaimer</h4>
+            <p>Paid Cash Supplier is an independent platform. We are not affiliated with Telegram. Earnings depend on user activity and advertiser availability. We do not guarantee fixed income. Cryptocurrency values are volatile and may change.</p>
+
+            <h4>📞 Contact Admin</h4>
+            <div class="contact-box">
+                <p style="margin-bottom:6px;">For support, questions, or to report issues:</p>
+                <a href="https://t.me/duytoiktol" target="_blank">💬 @duytoiktol</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirm Overlay -->
     <div class="confirm-overlay" id="confirmOverlay">
         <div class="confirm-box">
@@ -482,6 +564,9 @@
         </div>
         <div class="nav-item" data-tab="ref" onclick="switchTab('ref')">
             <span class="nav-icon">👥</span> Referral
+        </div>
+        <div class="nav-item" data-tab="about" onclick="switchTab('about')">
+            <span class="nav-icon">📋</span> About
         </div>
     </div>
 
@@ -509,7 +594,7 @@
             tg.showPopup({ message: '✅ Link copied!' });
         }
 
-        // --- SLOTS ---
+        // --- SLOTS với phép nhân chính xác, kết quả >=10 ---
         function spinSlots() {
             if (isSpinning) return;
             isSpinning = true;
@@ -524,7 +609,7 @@
             slot1.classList.add('spinning');
             slot2.classList.add('spinning');
 
-            // Random spin animation for 2 seconds
+            // Random spin animation
             const spinInterval = setInterval(() => {
                 slot1.innerText = Math.floor(Math.random() * 20) + 1;
                 slot2.innerText = Math.floor(Math.random() * 10) + 1;
@@ -535,21 +620,23 @@
                 slot1.classList.remove('spinning');
                 slot2.classList.remove('spinning');
 
-                const a = Math.floor(Math.random() * 20) + 2;
-                const b = Math.floor(Math.random() * 10) + 1;
-                const result = a * b;
-                // Clamp 10-200
-                const reward = Math.max(10, Math.min(200, result));
+                // Tạo 2 số sao cho tích >=10 và <=200
+                let a, b, result;
+                do {
+                    a = Math.floor(Math.random() * 20) + 1;  // 1-20
+                    b = Math.floor(Math.random() * 10) + 1;  // 1-10
+                    result = a * b;
+                } while (result < 10 || result > 200);
 
                 slot1.innerText = a;
                 slot2.innerText = b;
-                document.getElementById('slotResult').innerText = reward;
+                document.getElementById('slotResult').innerText = result;
 
-                let bal = parseInt(document.getElementById('balance').innerText) + reward;
+                let bal = parseInt(document.getElementById('balance').innerText.replace(/,/g, '')) + result;
                 updateBalance(bal);
                 let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
                 document.getElementById('adsWatched').innerText = watched;
-                document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`;
+                document.getElementById('congratsText').innerText = `🎉 +${result} Coins! (${a} × ${b} = ${result})`;
 
                 btn.style.opacity = '1';
                 btn.innerText = '🎰 SPIN & EARN';
@@ -624,7 +711,7 @@
                 document.getElementById('withdrawAmount').style.borderColor = '#e53935';
                 valid = false;
             } else if (amount > balance) {
-                document.getElementById('amountError').innerText = 'Insufficient coins! Please earn more in "Watch & Earn".';
+                document.getElementById('amountError').innerText = 'Insufficient coins! Please earn more in "Earn" tab.';
                 document.getElementById('amountError').style.display = 'block';
                 document.getElementById('withdrawAmount').style.borderColor = '#e53935';
                 valid = false;
