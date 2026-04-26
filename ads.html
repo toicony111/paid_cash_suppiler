@@ -1,48 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Xem Quảng Cáo</title>
-    <!-- Nhúng SDK của Adsgram -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Simple</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        #ad-container { margin: 20px auto; max-width: 400px; }
-        #reward-status { color: green; font-weight: bold; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            padding: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 20px 0;
+        }
+        .users-count {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .card h2 { color: #ffd700; margin-bottom: 15px; }
+        .features { text-align: left; margin: 15px 0; line-height: 1.8; }
+        .features li { list-style: none; padding-left: 20px; position: relative; }
+        .features li::before { content: "•"; color: #ffd700; position: absolute; left: 0; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-gold { background: #ffd700; color: #1a1a2e; }
+        .btn-blue { background: #0f3460; color: white; border: 1px solid #ffd700; }
+        .btn-teal { background: #00b4d8; color: white; }
     </style>
 </head>
 <body>
-    <h2>📺 Xem quảng cáo để nhận thưởng</h2>
-    <div id="ad-container">
-        <!-- Quảng cáo Adsgram sẽ hiển thị ở đây -->
-        <adsgram-task 
-            data-block-id="YOUR_BLOCK_ID"
-            data-debug="false">
-        </adsgram-task>
+    <div class="header">Coin Simple 🪙</div>
+    <div class="users-count">👥 1,448 users</div>
+
+    <div class="card">
+        <h2>Welcome to CoinSimple 🎉</h2>
+        <p>Earn Crypto Litecoin/Polygon/Faucetpay or Dana Rupiah on Telegram</p>
     </div>
-    <p id="reward-status"></p>
+
+    <div class="card">
+        <h2>Bot Features</h2>
+        <ul class="features">
+            <li>Claim Unlimited Money by Watching Simple Ads</li>
+            <li>Rewards Per Claim $0.00024 or Rp4 or 436 LTC</li>
+            <li>Withdraw Very Low Only $0.03 or Rp500 or 56000 Litecoin</li>
+            <li>Payment to Litecoin/Polygon Direct Wallet or DANA Indonesia or Faucetpay Litecoin</li>
+            <li>Payment Process Fast Hourly 24/7</li>
+            <li>Unlimited Ads Everyday Earn As Much As You Want</li>
+        </ul>
+        <p style="margin-top:10px; font-style:italic;">Click Start Claim Unlimited Below to Start Earn</p>
+    </div>
+
+    <button class="btn btn-gold" id="startClaim">🚀 Start Claim Unlimited</button>
+    <button class="btn btn-blue" id="faucetPartner">🤝 FaucetSimple (Partner)</button>
+    <button class="btn btn-teal" id="joinGroup">📢 Join Payment Group</button>
 
     <script>
-        const adElement = document.querySelector('adsgram-task');
-        
-        adElement.addEventListener('reward', () => {
-            document.getElementById('reward-status').innerText = '✅ Bạn đã hoàn thành nhiệm vụ! +24 Coins';
-            // Gửi dữ liệu về bot qua Telegram Web App API
-            if (window.Telegram && window.Telegram.WebApp) {
-                Telegram.WebApp.sendData(JSON.stringify({ action: 'reward_claimed', coins: 24 }));
-            }
-        });
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Full màn hình
 
-        adElement.addEventListener('onError', (e) => {
-            document.getElementById('reward-status').innerText = '❌ Có lỗi xảy ra. Thử lại sau.';
-        });
+        document.getElementById('startClaim').onclick = () => {
+            tg.sendData(JSON.stringify({ action: 'start_claim' }));
+        };
 
-        // Khởi tạo Telegram Web App để giao tiếp với bot
-        if (window.Telegram && Telegram.WebApp) {
-            Telegram.WebApp.ready();
-            Telegram.WebApp.MainButton.setText('Đóng').show().onClick(() => {
-                Telegram.WebApp.close();
-            });
-        }
+        document.getElementById('faucetPartner').onclick = () => {
+            tg.openTelegramLink('https://t.me/FaucetSimpleBot');
+        };
+
+        document.getElementById('joinGroup').onclick = () => {
+            tg.openTelegramLink('https://t.me/your-group'); // Thay link group của bạn
+        };
     </script>
 </body>
 </html>
