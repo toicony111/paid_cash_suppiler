@@ -212,6 +212,24 @@
             min-height: 24px;
         }
 
+        /* Odds display */
+        .odds-info {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            font-size: 10px;
+            color: #81c784;
+        }
+        .odds-chip {
+            background: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid #c8e6c9;
+            font-weight: 600;
+        }
+
         /* Referral */
         .ref-card {
             background: white;
@@ -395,8 +413,8 @@
 
     <div class="balance-card">
         <div class="balance-label">💰 YOUR BALANCE</div>
-        <div class="balance-amount" id="balance">5000</div>
-        <div class="balance-usd">100,000 Coins = $1.00 | ≈ $<span id="balanceUsd">0.05</span></div>
+        <div class="balance-amount" id="balance">0</div>
+        <div class="balance-usd">100,000 Coins = $1.00 | ≈ $<span id="balanceUsd">0.00</span></div>
     </div>
 
     <!-- Tab Wallet -->
@@ -446,7 +464,7 @@
                     <input type="number" id="withdrawAmount" placeholder="Min: 100,000 coins" min="100000">
                     <div class="hint">
                         <span>Min: 100,000 coins ($1.00)</span>
-                        <span>Balance: <span id="formBalance">5000</span> coins</span>
+                        <span>Balance: <span id="formBalance">0</span> coins</span>
                     </div>
                     <div class="error-msg" id="amountError"></div>
                 </div>
@@ -481,7 +499,15 @@
 
             <p class="congrats-text" id="congratsText"></p>
             <button class="btn btn-gold" id="spinBtn" onclick="spinSlots()">🎰 SPIN & EARN</button>
-            <p style="color:#81c784; font-size:12px; margin-top:10px;">Spin to earn 10-200 Coins per ad</p>
+
+            <!-- Odds display -->
+            <div class="odds-info">
+                <span class="odds-chip">10-60: 70%</span>
+                <span class="odds-chip">60-120: 20%</span>
+                <span class="odds-chip">120-150: 6%</span>
+                <span class="odds-chip">150-180: 3%</span>
+                <span class="odds-chip">180-200: 1%</span>
+            </div>
         </div>
     </div>
 
@@ -594,7 +620,57 @@
             tg.showPopup({ message: '✅ Link copied!' });
         }
 
-        // --- SLOTS với phép nhân chính xác, kết quả >=10 ---
+        // --- Tỉ lệ ra reward theo xác suất ---
+        function getRandomReward() {
+            const rand = Math.random() * 100; // 0-100
+            if (rand < 70) {
+                // 70% : 10-60
+                return Math.floor(Math.random() * 51) + 10;
+            } else if (rand < 90) {
+                // 20% : 60-120
+                return Math.floor(Math.random() * 61) + 60;
+            } else if (rand < 96) {
+                // 6% : 120-150
+                return Math.floor(Math.random() * 31) + 120;
+            } else if (rand < 99) {
+                // 3% : 150-180
+                return Math.floor(Math.random() * 31) + 150;
+            } else {
+                // 1% : 180-200
+                return Math.floor(Math.random() * 21) + 180;
+            }
+        }
+
+        // Tìm cặp số a, b sao cho a*b = target (hoặc gần nhất có thể)
+        function findFactors(target) {
+            // Tìm tất cả cặp a (1-20), b (1-10) có a*b = target
+            const pairs = [];
+            for (let a = 1; a <= 20; a++) {
+                for (let b = 1; b <= 10; b++) {
+                    if (a * b === target) {
+                        pairs.push([a, b]);
+                    }
+                }
+            }
+            if (pairs.length > 0) {
+                return pairs[Math.floor(Math.random() * pairs.length)];
+            }
+            // Nếu không có cặp chính xác, tìm cặp gần nhất
+            let bestPair = [1, 1];
+            let bestDiff = Infinity;
+            for (let a = 1; a <= 20; a++) {
+                for (let b = 1; b <= 10; b++) {
+                    const diff = Math.abs(a * b - target);
+                    if (diff < bestDiff) {
+                        bestDiff = diff;
+                        bestPair = [a, b];
+                    }
+                }
+            }
+            return bestPair;
+        }
+
+        // --- SLOTS với phép nhân chính xác theo tỉ lệ ---
         function spinSlots() {
             if (isSpinning) return;
             isSpinning = true;
@@ -620,23 +696,18 @@
                 slot1.classList.remove('spinning');
                 slot2.classList.remove('spinning');
 
-                // Tạo 2 số sao cho tích >=10 và <=200
-                let a, b, result;
-                do {
-                    a = Math.floor(Math.random() * 20) + 1;  // 1-20
-                    b = Math.floor(Math.random() * 10) + 1;  // 1-10
-                    result = a * b;
-                } while (result < 10 || result > 200);
+                const reward = getRandomReward();
+                const [a, b] = findFactors(reward);
 
                 slot1.innerText = a;
                 slot2.innerText = b;
-                document.getElementById('slotResult').innerText = result;
+                document.getElementById('slotResult').innerText = reward;
 
-                let bal = parseInt(document.getElementById('balance').innerText.replace(/,/g, '')) + result;
+                let bal = parseInt(document.getElementById('balance').innerText.replace(/,/g, '')) + reward;
                 updateBalance(bal);
                 let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
                 document.getElementById('adsWatched').innerText = watched;
-                document.getElementById('congratsText').innerText = `🎉 +${result} Coins! (${a} × ${b} = ${result})`;
+                document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`;
 
                 btn.style.opacity = '1';
                 btn.innerText = '🎰 SPIN & EARN';
