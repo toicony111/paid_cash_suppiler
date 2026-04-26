@@ -596,7 +596,6 @@
                     cachedBalance = data.user.balance;
                     updateBalance(cachedBalance);
                     localStorage.setItem('pcs_balance', cachedBalance);
-                    localStorage.setItem('pcs_balance_time', Date.now());
 
                     document.getElementById('refLink').innerText =
                         `https://t.me/PaidCashSupplierBot?start=ref${data.user.ref_code}`;
@@ -610,7 +609,6 @@
                 if (saved) {
                     cachedBalance = parseInt(saved);
                     updateBalance(cachedBalance);
-                    tg.showPopup({ message: '⚠️ Using cached balance' });
                 }
             }
         }
@@ -623,7 +621,6 @@
                 localStorage.setItem('pcs_balance', cachedBalance);
                 return;
             }
-
             try {
                 const res = await fetch(`${API_URL}/api/user/update-balance`, {
                     method: 'POST',
@@ -655,10 +652,8 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        telegram_id: telegramId,
-                        method: method,
-                        wallet_address: wallet,
-                        amount: amount
+                        telegram_id: telegramId, method: method,
+                        wallet_address: wallet, amount: amount
                     })
                 });
                 const data = await res.json();
@@ -668,12 +663,11 @@
                 }
                 return true;
             } catch (e) {
-                tg.showPopup({ message: '❌ Network error. Try again.' });
+                tg.showPopup({ message: '❌ Network error' });
                 return false;
             }
         }
 
-        // ========== UI FUNCTIONS ==========
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -697,35 +691,31 @@
             document.getElementById('formBalance').innerText = newBal.toLocaleString();
         }
 
-        // ========== SLOTS ==========
         function getRandomReward() {
             const rand = Math.random() * 100;
             if (rand < 70) return Math.floor(Math.random() * 51) + 10;
-            else if (rand < 90) return Math.floor(Math.random() * 61) + 60;
-            else if (rand < 96) return Math.floor(Math.random() * 31) + 120;
-            else if (rand < 99) return Math.floor(Math.random() * 31) + 150;
-            else return Math.floor(Math.random() * 21) + 180;
+            if (rand < 90) return Math.floor(Math.random() * 61) + 60;
+            if (rand < 96) return Math.floor(Math.random() * 31) + 120;
+            if (rand < 99) return Math.floor(Math.random() * 31) + 150;
+            return Math.floor(Math.random() * 21) + 180;
         }
 
         function findFactors(target) {
             const pairs = [];
-            for (let a = 1; a <= 20; a++) {
-                for (let b = 1; b <= 10; b++) {
+            for (let a = 1; a <= 20; a++)
+                for (let b = 1; b <= 10; b++)
                     if (a * b === target) pairs.push([a, b]);
-                }
-            }
             if (pairs.length > 0) return pairs[Math.floor(Math.random() * pairs.length)];
-            let bestPair = [1, 1], bestDiff = Infinity;
-            for (let a = 1; a <= 20; a++) {
+            let best = [1, 1], bestDiff = Infinity;
+            for (let a = 1; a <= 20; a++)
                 for (let b = 1; b <= 10; b++) {
-                    const diff = Math.abs(a * b - target);
-                    if (diff < bestDiff) { bestDiff = diff; bestPair = [a, b]; }
+                    const d = Math.abs(a * b - target);
+                    if (d < bestDiff) { bestDiff = d; best = [a, b]; }
                 }
-            }
-            return bestPair;
+            return best;
         }
 
-        // ========== ADSGRAM + SPIN ==========
+        // ========== SPIN (có Adsgram fallback) ==========
         function spinSlots() {
             if (isSpinning) return;
             isSpinning = true;
@@ -734,72 +724,58 @@
             btn.innerText = '📺 LOADING AD...';
             document.getElementById('congratsText').innerText = '';
 
-            // Tạo container cho Adsgram
-            const adContainer = document.createElement('div');
-            adContainer.id = 'adsgram-container';
-            adContainer.style.display = 'none';
-            document.body.appendChild(adContainer);
-
-            // Tạo adsgram-task element
-            const adTask = document.createElement('adsgram-task');
-            adTask.setAttribute('data-block-id', ADSGRAM_BLOCK_ID);
-            adContainer.appendChild(adTask);
-
-            // Callback khi xem xong quảng cáo
-            adTask.addEventListener('reward', () => {
-                adContainer.remove();
+            // Thử dùng Adsgram API mới
+            if (typeof Adsgram !== 'undefined') {
+                try {
+                    const adsgram = new Adsgram({ blockId: ADSGRAM_BLOCK_ID });
+                    adsgram.show()
+                        .then(() => {
+                            doSpin(btn);
+                        })
+                        .catch((err) => {
+                            console.log('Ad skipped/error, spinning anyway:', err);
+                            doSpin(btn);
+                        });
+                } catch (e) {
+                    console.log('Adsgram error, spinning anyway:', e);
+                    doSpin(btn);
+                }
+            } else {
+                // SDK chưa load, spin luôn
+                console.log('Adsgram SDK not loaded, spinning directly');
                 doSpin(btn);
-            });
-
-            // Callback khi lỗi
-            adTask.addEventListener('error', (e) => {
-                console.error('Adsgram error:', e);
-                adContainer.remove();
-                btn.style.opacity = '1';
-                btn.innerText = '🎰 SPIN & EARN';
-                isSpinning = false;
-                tg.showPopup({ message: '❌ Ad failed. Please try again.' });
-            });
-
-            // Trigger quảng cáo
-            setTimeout(() => {
-                adTask.click();
-            }, 300);
+            }
         }
 
         function doSpin(btn) {
             btn.innerText = '🎰 SPINNING...';
             document.getElementById('slotResult').innerText = '?';
 
-            const slot1 = document.getElementById('slot1');
-            const slot2 = document.getElementById('slot2');
-            slot1.classList.add('spinning');
-            slot2.classList.add('spinning');
+            const s1 = document.getElementById('slot1');
+            const s2 = document.getElementById('slot2');
+            s1.classList.add('spinning');
+            s2.classList.add('spinning');
 
-            const spinInterval = setInterval(() => {
-                slot1.innerText = Math.floor(Math.random() * 20) + 1;
-                slot2.innerText = Math.floor(Math.random() * 10) + 1;
+            const interval = setInterval(() => {
+                s1.innerText = Math.floor(Math.random() * 20) + 1;
+                s2.innerText = Math.floor(Math.random() * 10) + 1;
             }, 100);
 
             setTimeout(() => {
-                clearInterval(spinInterval);
-                slot1.classList.remove('spinning');
-                slot2.classList.remove('spinning');
+                clearInterval(interval);
+                s1.classList.remove('spinning');
+                s2.classList.remove('spinning');
 
                 const reward = getRandomReward();
                 const [a, b] = findFactors(reward);
-
-                slot1.innerText = a;
-                slot2.innerText = b;
+                s1.innerText = a;
+                s2.innerText = b;
                 document.getElementById('slotResult').innerText = reward;
 
                 cachedBalance += reward;
                 updateBalance(cachedBalance);
-
-                let watched = parseInt(document.getElementById('adsWatched').innerText) + 1;
-                document.getElementById('adsWatched').innerText = watched;
+                document.getElementById('adsWatched').innerText = parseInt(document.getElementById('adsWatched').innerText) + 1;
                 document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`;
-
                 claimReward(reward);
 
                 btn.style.opacity = '1';
@@ -808,7 +784,7 @@
             }, 2000);
         }
 
-        // ========== WITHDRAW ==========
+        // ========== WITHDRAW UI ==========
         function showWithdrawForm() {
             document.getElementById('wallet-main').style.display = 'none';
             document.getElementById('withdraw-form').style.display = 'block';
@@ -830,15 +806,15 @@
         }
 
         function updateMethod() {
-            const method = document.getElementById('paymentMethod').value;
-            const label = document.getElementById('walletLabel');
-            const input = document.getElementById('walletAddress');
-            if (method === 'usdt') {
-                label.innerText = 'USDT Wallet Address (BEP20)';
-                input.placeholder = 'Enter your USDT BEP20 address (0x...)';
+            const m = document.getElementById('paymentMethod').value;
+            const l = document.getElementById('walletLabel');
+            const i = document.getElementById('walletAddress');
+            if (m === 'usdt') {
+                l.innerText = 'USDT Wallet Address (BEP20)';
+                i.placeholder = 'Enter your USDT BEP20 address (0x...)';
             } else {
-                label.innerText = method === 'paypal' ? 'PayPal Email Address' : 'FaucetPay Email Address';
-                input.placeholder = method === 'paypal' ? 'Enter your PayPal email' : 'Enter your FaucetPay email';
+                l.innerText = m === 'paypal' ? 'PayPal Email Address' : 'FaucetPay Email Address';
+                i.placeholder = m === 'paypal' ? 'Enter your PayPal email' : 'Enter your FaucetPay email';
             }
         }
 
@@ -851,50 +827,43 @@
 
         function confirmWithdraw() {
             clearErrors();
-            const method = document.getElementById('paymentMethod').value;
-            const wallet = document.getElementById('walletAddress').value.trim();
-            const amount = parseInt(document.getElementById('withdrawAmount').value);
-            const balance = cachedBalance;
-            let valid = true;
-
-            if (!wallet || wallet.length < 5) {
-                document.getElementById('walletError').innerText = method === 'usdt' ? 'Please enter a valid BEP20 address' : 'Please enter a valid email';
+            const m = document.getElementById('paymentMethod').value;
+            const w = document.getElementById('walletAddress').value.trim();
+            const a = parseInt(document.getElementById('withdrawAmount').value);
+            let ok = true;
+            if (!w || w.length < 5) {
+                document.getElementById('walletError').innerText = m === 'usdt' ? 'Enter valid BEP20 address' : 'Enter valid email';
                 document.getElementById('walletError').style.display = 'block';
                 document.getElementById('walletAddress').style.borderColor = '#e53935';
-                valid = false;
+                ok = false;
             }
-            if (!amount || amount < 100000) {
-                document.getElementById('amountError').innerText = 'Minimum withdraw is 100,000 coins ($1.00)';
+            if (!a || a < 100000) {
+                document.getElementById('amountError').innerText = 'Min 100,000 coins ($1.00)';
                 document.getElementById('amountError').style.display = 'block';
                 document.getElementById('withdrawAmount').style.borderColor = '#e53935';
-                valid = false;
-            } else if (amount > balance) {
-                document.getElementById('amountError').innerText = 'Insufficient coins! Please earn more in "Earn" tab.';
+                ok = false;
+            } else if (a > cachedBalance) {
+                document.getElementById('amountError').innerText = 'Insufficient coins! Earn more in "Earn" tab.';
                 document.getElementById('amountError').style.display = 'block';
                 document.getElementById('withdrawAmount').style.borderColor = '#e53935';
-                valid = false;
+                ok = false;
             }
-            if (!valid) return;
-
-            document.getElementById('confirmMethod').innerText = method.toUpperCase();
-            document.getElementById('confirmWallet').innerText = wallet.length > 24 ? wallet.substring(0, 24) + '...' : wallet;
-            document.getElementById('confirmAmount').innerText = amount.toLocaleString();
+            if (!ok) return;
+            document.getElementById('confirmMethod').innerText = m.toUpperCase();
+            document.getElementById('confirmWallet').innerText = w.length > 24 ? w.substring(0, 24) + '...' : w;
+            document.getElementById('confirmAmount').innerText = a.toLocaleString();
             document.getElementById('confirmOverlay').classList.add('show');
         }
 
-        function closeConfirm() {
-            document.getElementById('confirmOverlay').classList.remove('show');
-        }
+        function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('show'); }
 
         async function processWithdraw() {
-            const method = document.getElementById('paymentMethod').value;
-            const wallet = document.getElementById('walletAddress').value.trim();
-            const amount = parseInt(document.getElementById('withdrawAmount').value);
-
-            const success = await submitWithdrawAPI(method, wallet, amount);
-
-            if (success) {
-                cachedBalance -= amount;
+            const m = document.getElementById('paymentMethod').value;
+            const w = document.getElementById('walletAddress').value.trim();
+            const a = parseInt(document.getElementById('withdrawAmount').value);
+            const ok = await submitWithdrawAPI(m, w, a);
+            if (ok) {
+                cachedBalance -= a;
                 updateBalance(cachedBalance);
                 localStorage.setItem('pcs_balance', cachedBalance);
                 document.getElementById('confirmOverlay').classList.remove('show');
@@ -907,7 +876,6 @@
             }
         }
 
-        // ========== START ==========
         initUser();
     </script>
 </body>
