@@ -1,741 +1,4 @@
-import requests
-import time
-import json
-import threading
-import re
-from urllib.parse import urlparse, parse_qs, unquote
-from datetime import datetime, timedelta
-import os
-import sys
-import uuid
-import random
-import signal
-
-# ========== CONFIG ==========
-TOKEN_FILE = "token.txt"
-# ============================
-
-try:
-    from colorama import init
-    init()
-except:
-    pass
-
-shutdown_flag = threading.Event()
-bots = []
-threads = []
-print_lock = threading.Lock()
-
-acc_line_number = {}
-total_lines = 0
-
-token_storage = {}
-token_lock = threading.Lock()
-
-def clear_line():
-    sys.stdout.write("\033[2K\r")
-
-def move_up(n=1):
-    if n > 0:
-        sys.stdout.write(f"\033[{n}A")
-
-def move_down(n=1):
-    if n > 0:
-        sys.stdout.write(f"\033[{n}B")
-
-def save_cursor():
-    sys.stdout.write("\033[s")
-
-def restore_cursor():
-    sys.stdout.write("\033[u")
-
-def log_acc_update(acc_id, msg):
-    global total_lines, acc_line_number
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    line = f"[{timestamp}] [{acc_id}] {msg}"
-    
-    with print_lock:
-        if acc_id not in acc_line_number:
-            print(line)
-            total_lines += 1
-            acc_line_number[acc_id] = total_lines
-        else:
-            line_num = acc_line_number[acc_id]
-            lines_to_move = total_lines - line_num + 1
-            
-            save_cursor()
-            move_up(lines_to_move)
-            clear_line()
-            print(line)
-            move_down(lines_to_move - 1)
-            restore_cursor()
-        
-        sys.stdout.flush()
-
-def signal_handler(signum, frame):
-    print()
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] [SYS] Dang dung tool...")
-    shutdown_flag.set()
-    for t in threads:
-        if t.is_alive():
-            t.join(timeout=2)
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] [SYS] Da dung!")
-    sys.exit(0)
-
-def load_tokens():
-    global token_storage
-    if not os.path.exists(TOKEN_FILE):
-        return
-    try:
-        with open(TOKEN_FILE, 'r', encoding='utf-8') as f:
-            lines = f.read().strip().split('\n')
-            for i, line in enumerate(lines):
-                line = line.strip()
-                if line and '|' in line:
-                    parts = line.split('|')
-                    if len(parts) >= 2:
-                        token_storage[i] = {
-                            "refresh_token": parts[0].strip(),
-                            "access_token": parts[1].strip()
-                        }
-    except:
-        pass
-
-def save_tokens():
-    global token_storage
-    try:
-        existing = []
-        if os.path.exists(TOKEN_FILE):
-            with open(TOKEN_FILE, 'r', encoding='utf-8') as f:
-                existing = f.read().split('\n')
-        
-        max_idx = max(token_storage.keys()) if token_storage else -1
-        for i in range(max_idx + 1):
-            if i in token_storage:
-                token_str = f"{token_storage[i]['refresh_token']}|{token_storage[i]['access_token']}"
-                if i < len(existing):
-                    existing[i] = token_str
-                else:
-                    existing.append(token_str)
-            else:
-                if i >= len(existing):
-                    existing.append("")
-        
-        with open(TOKEN_FILE, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(existing))
-    except:
-        pass
-
-def update_token(index, refresh_token, access_token):
-    global token_storage
-    token_storage[index] = {"refresh_token": refresh_token, "access_token": access_token}
-    save_tokens()
-
-class BYNAIBot:
-    def __init__(self, link, acc_id, start_delay=0, account_index=0):
-        self.acc_id = acc_id
-        self.link = link
-        self.start_delay = start_delay
-        self.account_index = account_index
-        self.access_token = None
-        self.refresh_token = None
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "Origin": "https://tma-rewards.bynai.com",
-            "Referer": "https://tma-rewards.bynai.com/",
-        })
-        
-        self.init_data = self.parse_init_data(link)
-        self.start_param = self.parse_start_param(link)
-        
-        self.xp = 0
-        self.keys = 0
-        self.tickets = 0
-        self.usdt = 0.0
-        self.running = True
-        self.display_name = "Unknown"
-        
-        self.last_checkin_check = None
-        self.last_mission_check = time.time()
-        self.last_connection_check = time.time()
-        self.connection_error_count = 0
-        
-        self.status = "Starting..."
-        self.refresh_live = False
-        self.link_live = False
-        
-        self._load_saved_token()
-        
-    def parse_init_data(self, link):
-        if not link:
-            return ""
-        match = re.search(r'#tgWebAppData=([^&]+)', link)
-        if match:
-            return unquote(match.group(1))
-        match = re.search(r'user=([^&]+)', link)
-        if match:
-            user_part = unquote(match.group(1))
-            params = {}
-            for p in ['user', 'chat_instance', 'chat_type', 'start_param', 'auth_date', 'signature', 'hash']:
-                m = re.search(rf'{p}=([^&]+)', link)
-                if m:
-                    params[p] = unquote(m.group(1)) if p != 'user' else user_part
-            return '&'.join([f"{k}={v}" for k, v in params.items()])
-        return ""
-    
-    def parse_start_param(self, link):
-        if not link:
-            return ""
-        match = re.search(r'start_param=([^&]+)', link)
-        return unquote(match.group(1)) if match else ""
-    
-    def _load_saved_token(self):
-        with token_lock:
-            if self.account_index in token_storage:
-                saved = token_storage[self.account_index]
-                self.refresh_token = saved.get("refresh_token")
-                self.access_token = saved.get("access_token")
-                if self.refresh_token:
-                    self.refresh_live = True
-                return True
-        return False
-    
-    def _clear_auth_header(self):
-        if "Authorization" in self.session.headers:
-            del self.session.headers["Authorization"]
-    
-    def _set_auth_header(self, token):
-        self.session.headers.update({"Authorization": f"Bearer {token}"})
-    
-    def _is_network_error(self, error):
-        error_str = str(error).lower()
-        return any(x in error_str for x in [
-            'connection', 'timeout', 'dns', 'resolution', 
-            'getaddrinfo', 'name or service', 'network'
-        ])
-    
-    def _try_refresh_access_token(self):
-        if not self.refresh_token:
-            self.refresh_live = False
-            return False
-        
-        try:
-            temp_session = requests.Session()
-            temp_session.headers.update({
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "Origin": "https://tma-rewards.bynai.com",
-                "Referer": "https://tma-rewards.bynai.com/",
-                "Authorization": f"Bearer {self.refresh_token}"
-            })
-            
-            url = "https://tma-rewards.bynai.com/api/v1/auth/refresh"
-            resp = temp_session.post(url, timeout=10)
-            
-            if resp and resp.status_code == 201:
-                data = resp.json()
-                new_access = data.get("token")
-                new_refresh = data.get("refreshToken", self.refresh_token)
-                
-                if new_access:
-                    self.access_token = new_access
-                    self.refresh_token = new_refresh
-                    self._set_auth_header(self.access_token)
-                    update_token(self.account_index, self.refresh_token, self.access_token)
-                    self.refresh_live = True
-                    return True
-            
-            self.refresh_live = False
-            return False
-            
-        except Exception as e:
-            if self._is_network_error(e):
-                self.connection_error_count += 1
-            self.refresh_live = False
-            return False
-    
-    def _try_login_with_link(self):
-        if not self.init_data:
-            self.link_live = False
-            return False
-        
-        try:
-            temp_session = requests.Session()
-            temp_session.headers.update({
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "Origin": "https://tma-rewards.bynai.com",
-                "Referer": "https://tma-rewards.bynai.com/",
-            })
-            
-            url = "https://tma-rewards.bynai.com/api/v1/auth/telegram"
-            payload = {"initData": self.init_data, "startParam": self.start_param}
-            resp = temp_session.post(url, json=payload, timeout=15)
-            
-            if resp and resp.status_code == 201:
-                data = resp.json()
-                self.access_token = data.get("token")
-                self.refresh_token = data.get("refreshToken", self.access_token)
-                self.display_name = data.get("user", {}).get("displayName", "Unknown")
-                self._set_auth_header(self.access_token)
-                self.refresh_live = True
-                self.link_live = True
-                update_token(self.account_index, self.refresh_token, self.access_token)
-                return True
-            
-            self.link_live = False
-            return False
-            
-        except Exception as e:
-            if self._is_network_error(e):
-                self.connection_error_count += 1
-            self.link_live = False
-            return False
-    
-    def login(self):
-        self._clear_auth_header()
-        
-        # 1. Thử access token
-        if self.access_token:
-            self.status = "Trying Access Token..."
-            log_acc_update(self.acc_id, self.status)
-            
-            self._set_auth_header(self.access_token)
-            try:
-                resp = self.session.get(
-                    "https://tma-rewards.bynai.com/api/v1/home/summary",
-                    timeout=10
-                )
-                
-                if resp and resp.status_code == 200:
-                    self.status = "Access Token LIVE ✓"
-                    log_acc_update(self.acc_id, self.status)
-                    self.refresh_live = True
-                    self.connection_error_count = 0
-                    return True
-                else:
-                    self.status = "Access Token DIE ✗"
-                    log_acc_update(self.acc_id, self.status)
-                    self.access_token = None
-                    self._clear_auth_header()
-            except Exception as e:
-                self.status = f"Network Error: {str(e)[:30]}"
-                log_acc_update(self.acc_id, self.status)
-                self.connection_error_count += 1
-                return False
-        
-        # 2. Thử refresh token
-        if self.refresh_token:
-            self.status = "Trying Refresh Token..."
-            log_acc_update(self.acc_id, self.status)
-            
-            if self._try_refresh_access_token():
-                self.status = "Refresh Token OK ✓"
-                log_acc_update(self.acc_id, self.status)
-                self.connection_error_count = 0
-                return True
-            else:
-                self.status = "Refresh Token DIE ✗"
-                log_acc_update(self.acc_id, self.status)
-                self.refresh_token = None
-                self._clear_auth_header()
-        
-        # 3. Thử link gốc
-        if self.init_data:
-            self.status = "Trying Link Login..."
-            log_acc_update(self.acc_id, self.status)
-            
-            if self._try_login_with_link():
-                self.status = "Link Login OK ✓"
-                log_acc_update(self.acc_id, self.status)
-                self.connection_error_count = 0
-                return True
-            else:
-                self.status = "Link Login DIE ✗"
-                log_acc_update(self.acc_id, self.status)
-        
-        self.status = "ALL LOGIN METHODS FAILED ✗"
-        log_acc_update(self.acc_id, self.status)
-        self.refresh_live = False
-        self.link_live = False
-        return False
-    
-    def smart_sleep(self, seconds):
-        if seconds <= 0:
-            return
-        chunk = 0.5
-        remaining = seconds
-        while remaining > 0:
-            if shutdown_flag.is_set() or not self.running:
-                return
-            time.sleep(min(chunk, remaining))
-            remaining -= chunk
-    
-    def safe_request(self, method, url, **kwargs):
-        if shutdown_flag.is_set() or not self.running:
-            return None
-        try:
-            if method.upper() == "GET":
-                resp = self.session.get(url, timeout=15, **kwargs)
-            elif method.upper() == "POST":
-                resp = self.session.post(url, timeout=15, **kwargs)
-            else:
-                return None
-            
-            if resp.status_code == 401:
-                self.status = "Token expired, refreshing..."
-                log_acc_update(self.acc_id, self.status)
-                
-                if self._try_refresh_access_token():
-                    if method.upper() == "GET":
-                        return self.session.get(url, timeout=15, **kwargs)
-                    else:
-                        return self.session.post(url, timeout=15, **kwargs)
-                else:
-                    self.status = "Refresh failed"
-                    log_acc_update(self.acc_id, self.status)
-            
-            return resp
-        except Exception as e:
-            if self._is_network_error(e):
-                self.connection_error_count += 1
-            return None
-    
-    def get_summary(self):
-        resp = self.safe_request("GET", "https://tma-rewards.bynai.com/api/v1/home/summary")
-        if resp and resp.status_code == 200:
-            self.connection_error_count = 0
-            data = resp.json()
-            wallet = data.get("wallet", {})
-            self.xp = wallet.get("xp", 0)
-            self.keys = wallet.get("keys", 0)
-            self.tickets = wallet.get("tickets", 0)
-            
-            assets = wallet.get("assets", [])
-            self.usdt = 0.0
-            for asset in assets:
-                if asset.get("name") == "USDT":
-                    self.usdt = float(asset.get("balance", 0))
-            
-            streak = data.get("streak", {})
-            checked_in = streak.get("checkedInToday", False)
-            hourly = data.get("hourlyTicket", {})
-            
-            return {
-                "xp": self.xp, "keys": self.keys, "tickets": self.tickets, "usdt": self.usdt,
-                "claimable": hourly.get("claimable", False),
-                "next_claim": hourly.get("nextClaimAt"),
-                "checked_in_today": checked_in
-            }
-        return None
-    
-    def checkin(self):
-        resp = self.safe_request("POST", "https://tma-rewards.bynai.com/api/v1/checkin")
-        if resp and resp.status_code == 201:
-            return True
-        return False
-    
-    def get_missions(self, category):
-        url = f"https://tma-rewards.bynai.com/api/v1/missions?category={category}"
-        resp = self.safe_request("GET", url)
-        if resp and resp.status_code == 200:
-            return resp.json()
-        return []
-    
-    def start_mission(self, mission_id):
-        url = f"https://tma-rewards.bynai.com/api/v1/missions/{mission_id}/start"
-        resp = self.safe_request("POST", url)
-        return resp and resp.status_code == 201
-    
-    def claim_mission(self, mission_id):
-        url = f"https://tma-rewards.bynai.com/api/v1/missions/{mission_id}/claim"
-        resp = self.safe_request("POST", url)
-        return resp and resp.status_code == 201
-    
-    def do_follow_x_mission(self):
-        missions = self.get_missions("ONE_TIME")
-        
-        follow_mission = None
-        for m in missions:
-            if "Follow BYNAI on X" in m.get("title", ""):
-                follow_mission = m
-                break
-        
-        if not follow_mission:
-            return False
-        
-        mission_id = follow_mission.get("id")
-        state = follow_mission.get("state", "")
-        cta = follow_mission.get("cta", "")
-        
-        if state == "CAPPED":
-            return True
-        
-        if state == "AVAILABLE" and cta == "GO":
-            if self.start_mission(mission_id):
-                self.smart_sleep(10)
-                missions = self.get_missions("ONE_TIME")
-                for m in missions:
-                    if m.get("id") == mission_id:
-                        follow_mission = m
-                        break
-        
-        claimable = follow_mission.get("claimable", False)
-        cta = follow_mission.get("cta", "")
-        
-        if claimable or cta == "CLAIM":
-            return self.claim_mission(mission_id)
-        
-        return False
-    
-    def claim_all_missions(self):
-        categories = ["ONE_TIME", "DAILY", "WEEKLY", "SEASONAL"]
-        total_claimed = 0
-        
-        for cat in categories:
-            missions = self.get_missions(cat)
-            for m in missions:
-                mission_id = m.get("id")
-                claimable = m.get("claimable", False)
-                cta = m.get("cta", "")
-                
-                if claimable or cta == "CLAIM":
-                    if self.claim_mission(mission_id):
-                        total_claimed += 1
-                        self.smart_sleep(0.5)
-        
-        return total_claimed
-    
-    def get_vault_boxes(self):
-        """Lấy danh sách tất cả box IDs cần mở"""
-        resp = self.safe_request("GET", "https://tma-rewards.bynai.com/api/v1/vault/groups?limit=50&offset=0")
-        box_ids = []
-        if resp and resp.status_code == 200:
-            data = resp.json()
-            for item in data.get("items", []):
-                reward_type = item.get("rewardType", "")
-                if "MYSTERY_BOX" in reward_type and item.get("status") == "CLAIMABLE":
-                    box_ids.extend(item.get("ids", []))
-        return box_ids
-    
-    def open_box(self, box_id):
-        """Mở một box cụ thể - POST /api/v1/vault/{box_id}/open"""
-        url = f"https://tma-rewards.bynai.com/api/v1/vault/{box_id}/open"
-        resp = self.safe_request("POST", url)
-        if resp and resp.status_code in [200, 201]:
-            data = resp.json()
-            result = data.get("result", {})
-            reward_name = result.get("name", "Unknown")
-            log_acc_update(self.acc_id, f"Opened box: {reward_name} ✓")
-            return True
-        return False
-    
-    def open_all_boxes(self):
-        """Mở tất cả mystery boxes"""
-        box_ids = self.get_vault_boxes()
-        opened = 0
-        for box_id in box_ids:
-            if shutdown_flag.is_set():
-                break
-            if self.open_box(box_id):
-                opened += 1
-                self.smart_sleep(0.5)
-        if opened > 0:
-            log_acc_update(self.acc_id, f"Opened {opened} box(es) total")
-        return opened
-    
-    def has_boxes_to_open(self):
-        """Kiểm tra xem có box nào cần mở không"""
-        box_ids = self.get_vault_boxes()
-        return len(box_ids) > 0
-    
-    def open_newly_purchased_box(self):
-        """Mở box vừa mua (dùng sau khi mua Box S)"""
-        self.smart_sleep(1)
-        return self.open_all_boxes()
-    
-    def claim_hourly_ticket(self):
-        resp = self.safe_request("POST", "https://tma-rewards.bynai.com/api/v1/hourly-ticket/claim")
-        if resp and resp.status_code == 201:
-            data = resp.json()
-            self.tickets = data.get("tickets", self.tickets)
-            log_acc_update(self.acc_id, "Claimed hourly ticket ✓")
-            return True
-        return False
-    
-    def spin_wheel(self):
-        payload = {"idempotencyKey": f"wheel-{int(time.time()*1000)}-{str(uuid.uuid4())[:8]}"}
-        resp = self.safe_request("POST", "https://tma-rewards.bynai.com/api/v1/lucky-wheel/spin", json=payload)
-        if resp and resp.status_code == 201:
-            data = resp.json()
-            wallet = data.get("wallet", {})
-            self.xp = wallet.get("xp", self.xp)
-            self.keys = wallet.get("keys", self.keys)
-            self.tickets = wallet.get("tickets", self.tickets)
-            
-            reward = data.get("reward", {})
-            reward_type = reward.get("rewardType", "Unknown")
-            log_acc_update(self.acc_id, f"Spin: {reward_type} ✓")
-            return True
-        return False
-    
-    def buy_ticket(self):
-        if self.xp < 500:
-            return False
-        
-        resp = self.safe_request("GET", "https://tma-rewards.bynai.com/api/v1/store")
-        if not resp or resp.status_code != 200:
-            return False
-        
-        items = resp.json().get("items", [])
-        ticket = next((i for i in items if i.get("rewardType") == "TICKET"), None)
-        if not ticket or not ticket.get("available"):
-            return False
-        
-        payload = {
-            "storeItemId": ticket["id"],
-            "quantity": 1,
-            "idempotencyKey": f"redeem_{ticket['id']}_{str(uuid.uuid4())[:16]}"
-        }
-        resp = self.safe_request("POST", "https://tma-rewards.bynai.com/api/v1/store/redeem", json=payload)
-        if resp and resp.status_code == 201:
-            wallet = resp.json().get("wallet", {})
-            self.xp = wallet.get("xp", self.xp)
-            self.keys = wallet.get("keys", self.keys)
-            self.tickets = wallet.get("tickets", self.tickets)
-            log_acc_update(self.acc_id, "Bought Ticket ✓")
-            return True
-        return False
-    
-    def buy_mystery_box_s(self):
-        if self.xp < 600 or self.keys < 1:
-            return False
-        
-        resp = self.safe_request("GET", "https://tma-rewards.bynai.com/api/v1/store")
-        if not resp or resp.status_code != 200:
-            return False
-        
-        items = resp.json().get("items", [])
-        box_s = None
-        for item in items:
-            if item.get("rewardType") == "MYSTERY_BOX_S":
-                box_s = item
-                break
-        
-        if not box_s or not box_s.get("available"):
-            return False
-        
-        log_acc_update(self.acc_id, "Buying Mystery Box S...")
-        
-        payload = {
-            "storeItemId": box_s["id"],
-            "quantity": 1,
-            "idempotencyKey": f"redeem_{box_s['id']}_{str(uuid.uuid4())[:16]}"
-        }
-        resp = self.safe_request("POST", "https://tma-rewards.bynai.com/api/v1/store/redeem", json=payload)
-        if resp and resp.status_code == 201:
-            wallet = resp.json().get("wallet", {})
-            self.xp = wallet.get("xp", self.xp)
-            self.keys = wallet.get("keys", self.keys)
-            self.tickets = wallet.get("tickets", self.tickets)
-            log_acc_update(self.acc_id, "Bought Box S ✓ -> Opening...")
-            
-            self.open_newly_purchased_box()
-            return True
-        
-        return False
-    
-    def format_time(self, seconds):
-        if seconds <= 0:
-            return "0'00"
-        m, s = int(seconds // 60), int(seconds % 60)
-        return f"{m}'{s:02d}"
-    
-    def get_wait(self, next_claim):
-        if not next_claim:
-            return 60
-        try:
-            t = datetime.fromisoformat(next_claim.replace('Z', '+00:00'))
-            return max(0, (t - datetime.now(t.tzinfo)).total_seconds())
-        except:
-            return 60
-    
-    def run(self):
-        self.smart_sleep(self.start_delay)
-        
-        login_success = False
-        login_attempts = 0
-        
-        while not login_success and login_attempts < 5 and not shutdown_flag.is_set():
-            self.status = f"Logging in... (attempt {login_attempts+1})"
-            log_acc_update(self.acc_id, self.status)
-            
-            login_success = self.login()
-            login_attempts += 1
-            
-            if not login_success:
-                if self.connection_error_count > 0:
-                    self.status = f"Network error, retry in 10s..."
-                    log_acc_update(self.acc_id, self.status)
-                    self.smart_sleep(10)
-                else:
-                    break
-        
-        if not login_success:
-            log_acc_update(self.acc_id, "Login failed after retries")
-            return
-        
-        self.smart_sleep(1)
-        
-        s = self.get_summary()
-        if not s:
-            return
-        
-        if not s.get("checked_in_today", True):
-            if self.checkin():
-                log_acc_update(self.acc_id, "Check-in ✓")
-                self.smart_sleep(1)
-                s = self.get_summary()
-        
-        # Mở tất cả box hiện có khi khởi động
-        self.open_all_boxes()
-        
-        self.do_follow_x_mission()
-        self.smart_sleep(1)
-        
-        claimed = self.claim_all_missions()
-        if claimed > 0:
-            log_acc_update(self.acc_id, f"Claimed {claimed} mission(s)")
-            self.smart_sleep(1)
-            s = self.get_summary()
-        
-        error_count = 0
-        
-        while self.running and not shutdown_flag.is_set():
-            try:
-                s = self.get_summary()
-                if not s:
-                    error_count += 1
-                    if error_count > 10:
-                        self.status = "Connection lost, reconnecting..."
-                        log_acc_update(self.acc_id, self.status)
-                        if self.login():
-                            error_count = 0
-                            continue
-                        else:
-                            self.smart_sleep(30)
-                            continue
-                    self.smart_sleep(5)
-                    continue
-                
-                error_count = 0
-                
-                refresh_status = "Refresh: LIVE" if self.refresh_live else "Refresh: DIE"<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -746,30 +9,16 @@ class BYNAIBot:
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 30%, #a5d6a7 100%);
-            color: #1b5e20;
-            max-width: 500px;
-            margin: 0 auto;
-            min-height: 100vh;
-            padding-bottom: 90px;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 30%, #a5d6a7 100%); color: #1b5e20; max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; }
         .header { text-align: center; padding: 25px 20px 5px; font-size: 26px; font-weight: 800; color: #2e7d32; }
         .subtitle { text-align: center; color: #4caf50; font-size: 13px; font-weight: 500; margin-bottom: 15px; }
-        .balance-card {
-            background: white; margin: 10px 15px; padding: 22px; border-radius: 24px;
-            text-align: center; box-shadow: 0 4px 24px rgba(46,125,50,0.12); border: 1px solid #c8e6c9;
-        }
+        .balance-card { background: white; margin: 10px 15px; padding: 22px; border-radius: 24px; text-align: center; box-shadow: 0 4px 24px rgba(46,125,50,0.12); border: 1px solid #c8e6c9; }
         .balance-label { color: #66bb6a; font-size: 13px; font-weight: 600; }
         .balance-amount { font-size: 44px; font-weight: 800; color: #2e7d32; }
         .balance-usd { color: #81c784; font-size: 14px; margin-top: 5px; font-weight: 500; }
         .tab-content { display: none; padding: 15px; }
         .tab-content.active { display: block; }
-        .btn {
-            width: 100%; padding: 16px; border: none; border-radius: 16px;
-            font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s;
-        }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn:active { transform: scale(0.96); }
         .btn-green { background: linear-gradient(135deg, #43a047, #2e7d32); color: white; box-shadow: 0 4px 16px rgba(46,125,50,0.25); }
         .btn-outline { background: white; border: 2px solid #43a047; color: #2e7d32; }
@@ -778,64 +27,40 @@ class BYNAIBot:
         .withdraw-card h3 { text-align: center; margin-bottom: 20px; color: #2e7d32; font-size: 20px; }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; color: #388e3c; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
-        .form-group select, .form-group input {
-            width: 100%; padding: 14px 16px; background: #f1f8e9; border: 2px solid #c8e6c9;
-            border-radius: 14px; color: #1b5e20; font-size: 15px; outline: none;
-        }
+        .form-group select, .form-group input { width: 100%; padding: 14px 16px; background: #f1f8e9; border: 2px solid #c8e6c9; border-radius: 14px; color: #1b5e20; font-size: 15px; outline: none; }
         .form-group select:focus, .form-group input:focus { border-color: #43a047; }
         .hint { display: flex; justify-content: space-between; color: #81c784; font-size: 12px; margin-top: 4px; }
         .error-msg { color: #e53935; font-size: 12px; margin-top: 4px; display: none; font-weight: 600; }
         .rate-info { text-align: center; background: #f1f8e9; padding: 10px; border-radius: 10px; margin-bottom: 16px; color: #388e3c; font-weight: 600; }
         .slots-container { background: white; border-radius: 24px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center; }
         .slot-row { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 8px 0; font-size: 28px; font-weight: 800; }
-        .slot-box {
-            width: 70px; height: 70px; background: linear-gradient(135deg, #fff9c4, #fff176);
-            border: 3px solid #ffb300; border-radius: 16px; display: flex; align-items: center;
-            justify-content: center; font-size: 30px; color: #e65100; box-shadow: 0 4px 12px rgba(255,179,0,0.2);
-        }
+        .slot-box { width: 70px; height: 70px; background: linear-gradient(135deg, #fff9c4, #fff176); border: 3px solid #ffb300; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #e65100; box-shadow: 0 4px 12px rgba(255,179,0,0.2); }
         .slot-box.spinning { animation: slotSpin 0.15s infinite; }
         @keyframes slotSpin { 0% { transform: translateY(-4px); } 50% { transform: translateY(4px); } 100% { transform: translateY(-4px); } }
-        .slot-op { font-size: 24px; color: #2e7d32; }
-        .slot-eq { font-size: 24px; color: #43a047; }
-        .slot-result {
-            width: 80px; height: 70px; background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
-            border: 3px solid #43a047; border-radius: 16px; display: flex; align-items: center;
-            justify-content: center; font-size: 28px; color: #1b5e20; box-shadow: 0 4px 12px rgba(46,125,50,0.2);
-        }
+        .slot-op { font-size: 24px; color: #2e7d32; } .slot-eq { font-size: 24px; color: #43a047; }
+        .slot-result { width: 80px; height: 70px; background: linear-gradient(135deg, #c8e6c9, #a5d6a7); border: 3px solid #43a047; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #1b5e20; box-shadow: 0 4px 12px rgba(46,125,50,0.2); }
         .congrats-text { color: #2e7d32; font-weight: 700; font-size: 16px; margin-top: 8px; min-height: 24px; }
         .odds-info { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; font-size: 10px; color: #81c784; }
         .odds-chip { background: white; padding: 4px 10px; border-radius: 20px; border: 1px solid #c8e6c9; font-weight: 600; }
         .ref-card { background: white; border-radius: 24px; padding: 20px; margin: 10px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center; }
-        .ref-link-box {
-            background: #f1f8e9; padding: 14px; border-radius: 12px; margin: 10px 0;
-            word-break: break-all; font-size: 13px; color: #2e7d32; border: 2px dashed #81c784; font-weight: 500;
-        }
+        .ref-link-box { background: #f1f8e9; padding: 14px; border-radius: 12px; margin: 10px 0; word-break: break-all; font-size: 13px; color: #2e7d32; border: 2px dashed #81c784; font-weight: 500; }
         .ref-stats { display: flex; justify-content: space-around; margin-top: 15px; gap: 10px; }
         .ref-stat { text-align: center; background: #f1f8e9; padding: 14px; border-radius: 14px; flex: 1; }
         .ref-stat .num { font-size: 22px; font-weight: 800; color: #2e7d32; }
         .ref-stat .lbl { color: #66bb6a; font-size: 12px; }
-
-        /* Ref details */
         .ref-details { margin-top: 15px; text-align: left; }
         .ref-details h4 { color: #2e7d32; margin-bottom: 8px; font-size: 15px; }
-        .ref-detail-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px; background: #f1f8e9; border-radius: 10px; margin: 6px 0; font-size: 13px;
-        }
+        .ref-detail-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f1f8e9; border-radius: 10px; margin: 6px 0; font-size: 13px; }
         .ref-detail-item .name { font-weight: 600; color: #2e7d32; }
         .ref-detail-item .earned { color: #e65100; font-weight: 700; }
         .ref-detail-item .date { color: #81c784; font-size: 11px; }
-
         .about-card { background: white; border-radius: 24px; padding: 24px; margin: 10px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); }
         .about-card h3 { color: #2e7d32; margin-bottom: 16px; }
         .about-card h4 { color: #388e3c; margin: 14px 0 6px; }
         .about-card p, .about-card li { color: #4a7c4f; font-size: 14px; line-height: 1.6; }
         .contact-box { background: #f1f8e9; padding: 14px; border-radius: 12px; text-align: center; margin-top: 16px; border: 2px solid #c8e6c9; }
         .contact-box a { color: #2e7d32; font-weight: 700; text-decoration: none; }
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px;
-            display: flex; background: white; border-top: 1px solid #c8e6c9; z-index: 10; box-shadow: 0 -2px 16px rgba(0,0,0,0.05);
-        }
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; display: flex; background: white; border-top: 1px solid #c8e6c9; z-index: 10; box-shadow: 0 -2px 16px rgba(0,0,0,0.05); }
         .nav-item { flex: 1; padding: 12px 8px; text-align: center; cursor: pointer; color: #81c784; font-size: 11px; font-weight: 600; }
         .nav-item.active { color: #2e7d32; }
         .nav-icon { font-size: 18px; display: block; margin-bottom: 2px; }
@@ -890,108 +115,46 @@ class BYNAIBot:
             <div class="withdraw-card">
                 <h3>💸 Withdraw Funds</h3>
                 <div class="rate-info">💡 100,000 Coins = $1.00</div>
-                <div class="form-group">
-                    <label>Payment Method</label>
-                    <select id="paymentMethod" onchange="updateMethod()">
-                        <option value="usdt">USDT (BEP20)</option>
-                        <option value="paypal">PayPal</option>
-                        <option value="faucetpay">FaucetPay</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label id="walletLabel">USDT Wallet Address (BEP20)</label>
-                    <input type="text" id="walletAddress" placeholder="Enter your USDT BEP20 wallet address (0x...)">
-                    <div class="error-msg" id="walletError"></div>
-                </div>
-                <div class="form-group">
-                    <label>Amount (Coins)</label>
-                    <input type="number" id="withdrawAmount" placeholder="Min: 100,000 coins" min="100000">
-                    <div class="hint"><span>Min: 100,000 coins ($1.00)</span><span>Balance: <span id="formBalance">0</span> coins</span></div>
-                    <div class="error-msg" id="amountError"></div>
-                </div>
+                <div class="form-group"><label>Payment Method</label><select id="paymentMethod" onchange="updateMethod()"><option value="usdt">USDT (BEP20)</option><option value="paypal">PayPal</option><option value="faucetpay">FaucetPay</option></select></div>
+                <div class="form-group"><label id="walletLabel">USDT Wallet Address (BEP20)</label><input type="text" id="walletAddress" placeholder="Enter your USDT BEP20 wallet address (0x...)"><div class="error-msg" id="walletError"></div></div>
+                <div class="form-group"><label>Amount (Coins)</label><input type="number" id="withdrawAmount" placeholder="Min: 100,000 coins" min="100000"><div class="hint"><span>Min: 100,000 coins ($1.00)</span><span>Balance: <span id="formBalance">0</span> coins</span></div><div class="error-msg" id="amountError"></div></div>
                 <button class="btn btn-green" onclick="confirmWithdraw()">✅ Submit Withdrawal</button>
                 <button class="btn btn-outline" onclick="cancelWithdraw()" style="margin-top:6px;">← Back to Wallet</button>
             </div>
         </div>
-        <div class="success-screen" id="success-screen">
-            <div class="icon">✅</div>
-            <h3>Withdrawal Submitted!</h3>
-            <p>Your request will be processed within 24 hours.</p>
-            <button class="btn btn-green" onclick="backToWallet()" style="margin-top:16px;">← Back to Wallet</button>
-        </div>
+        <div class="success-screen" id="success-screen"><div class="icon">✅</div><h3>Withdrawal Submitted!</h3><p>Your request will be processed within 24 hours.</p><button class="btn btn-green" onclick="backToWallet()" style="margin-top:16px;">← Back to Wallet</button></div>
     </div>
 
     <!-- Tab History -->
-    <div class="tab-content" id="tab-history">
-        <div class="history-card"><h4>📋 Withdraw History</h4><div id="historyList"><div class="no-data">Loading...</div></div></div>
-        <button class="btn btn-outline" onclick="switchTab('wallet')">← Back to Wallet</button>
-    </div>
+    <div class="tab-content" id="tab-history"><div class="history-card"><h4>📋 Withdraw History</h4><div id="historyList"><div class="no-data">Loading...</div></div></div><button class="btn btn-outline" onclick="switchTab('wallet')">← Back to Wallet</button></div>
 
     <!-- Tab Earn -->
     <div class="tab-content" id="tab-ads">
         <div class="slots-container">
             <p style="color:#66bb6a; font-weight:600;">🎰 SPIN & EARN</p>
             <p style="color:#81c784; font-size:13px; margin-bottom:12px;">Ads watched today: <span id="adsWatched">0</span></p>
-            <div class="slot-row">
-                <div class="slot-box" id="slot1">?</div><span class="slot-op">×</span>
-                <div class="slot-box" id="slot2">?</div><span class="slot-eq">=</span>
-                <div class="slot-result" id="slotResult">?</div>
-            </div>
+            <div class="slot-row"><div class="slot-box" id="slot1">?</div><span class="slot-op">×</span><div class="slot-box" id="slot2">?</div><span class="slot-eq">=</span><div class="slot-result" id="slotResult">?</div></div>
             <p class="congrats-text" id="congratsText"></p>
             <button class="btn btn-gold" id="spinBtn" onclick="spinSlots()">🎰 SPIN & EARN</button>
-            <div class="odds-info">
-                <span class="odds-chip">10-60: 70%</span><span class="odds-chip">60-120: 20%</span>
-                <span class="odds-chip">120-150: 6%</span><span class="odds-chip">150-180: 3%</span><span class="odds-chip">180-200: 1%</span>
-            </div>
+            <div class="odds-info"><span class="odds-chip">10-60: 70%</span><span class="odds-chip">60-120: 20%</span><span class="odds-chip">120-150: 6%</span><span class="odds-chip">150-180: 3%</span><span class="odds-chip">180-200: 1%</span></div>
         </div>
     </div>
 
     <!-- Tab Referral -->
     <div class="tab-content" id="tab-ref">
         <div class="ref-card">
-            <h3 style="color:#2e7d32;">👥 Invite Friends</h3>
-            <p style="color:#66bb6a; margin:8px 0;">Earn 10% from referrals</p>
-            <div class="ref-link-box" id="refLink">Loading...</div>
-            <button class="btn btn-green" onclick="copyRef()">📋 Copy Link</button>
-            <div class="ref-stats">
-                <div class="ref-stat"><div class="num" id="refCount">0</div><div class="lbl">Total Refs</div></div>
-                <div class="ref-stat"><div class="num" id="refEarnings">0</div><div class="lbl">Total Earned</div></div>
-            </div>
-            <!-- Danh sách người được giới thiệu -->
-            <div class="ref-details" id="refDetails">
-                <h4>📋 Your Referrals</h4>
-                <div id="refList"><div class="no-data">Loading...</div></div>
-            </div>
+            <h3 style="color:#2e7d32;">👥 Invite Friends</h3><p style="color:#66bb6a; margin:8px 0;">Earn 10% from referrals</p>
+            <div class="ref-link-box" id="refLink">Loading...</div><button class="btn btn-green" onclick="copyRef()">📋 Copy Link</button>
+            <div class="ref-stats"><div class="ref-stat"><div class="num" id="refCount">0</div><div class="lbl">Total Refs</div></div><div class="ref-stat"><div class="num" id="refEarnings">0</div><div class="lbl">Total Earned</div></div></div>
+            <div class="ref-details" id="refDetails"><h4>📋 Your Referrals</h4><div id="refList"><div class="no-data">Loading...</div></div></div>
         </div>
     </div>
 
     <!-- Tab About -->
-    <div class="tab-content" id="tab-about">
-        <div class="about-card">
-            <h3>📋 About & Contact Us</h3>
-            <h4>📜 Terms of Service</h4>
-            <ul><li>Users must be at least 18 years old.</li><li>Any fraudulent activity is strictly prohibited.</li><li>We reserve the right to ban violators.</li><li>Each user is allowed only one account.</li></ul>
-            <h4>🚫 Prohibited Activities</h4>
-            <ul><li>Using bots, emulators, or automated scripts.</li><li>VPN/proxy abuse.</li><li>Multiple accounts for referral fraud.</li></ul>
-            <h4>📞 Contact Admin</h4>
-            <div class="contact-box"><a href="https://t.me/duytoiktol" target="_blank">💬 @duytoiktol</a></div>
-        </div>
-    </div>
+    <div class="tab-content" id="tab-about"><div class="about-card"><h3>📋 About & Contact Us</h3><h4>📜 Terms of Service</h4><ul><li>Users must be at least 18 years old.</li><li>Any fraudulent activity is strictly prohibited.</li><li>We reserve the right to ban violators.</li><li>Each user is allowed only one account.</li></ul><h4>🚫 Prohibited Activities</h4><ul><li>Using bots, emulators, or automated scripts.</li><li>VPN/proxy abuse.</li><li>Multiple accounts for referral fraud.</li></ul><h4>📞 Contact Admin</h4><div class="contact-box"><a href="https://t.me/duytoiktol" target="_blank">💬 @duytoiktol</a></div></div></div>
 
     <!-- Confirm Overlay -->
-    <div class="confirm-overlay" id="confirmOverlay">
-        <div class="confirm-box">
-            <h3 style="color:#2e7d32;">⚠️ Confirm</h3>
-            <p>Method: <span class="confirm-val" id="confirmMethod">-</span></p>
-            <p>Address/Email: <span class="confirm-val" id="confirmWallet">-</span></p>
-            <p>Amount: <span class="confirm-val" id="confirmAmount">-</span> Coins</p>
-            <p style="color:#e53935; font-size:12px;">⚠️ Double check before confirming!</p>
-            <div class="confirm-btns">
-                <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
-                <button class="btn-confirm" onclick="processWithdraw()">Confirm</button>
-            </div>
-        </div>
-    </div>
+    <div class="confirm-overlay" id="confirmOverlay"><div class="confirm-box"><h3 style="color:#2e7d32;">⚠️ Confirm</h3><p>Method: <span class="confirm-val" id="confirmMethod">-</span></p><p>Address/Email: <span class="confirm-val" id="confirmWallet">-</span></p><p>Amount: <span class="confirm-val" id="confirmAmount">-</span> Coins</p><p style="color:#e53935; font-size:12px;">⚠️ Double check before confirming!</p><div class="confirm-btns"><button class="btn-cancel" onclick="closeConfirm()">Cancel</button><button class="btn-confirm" onclick="processWithdraw()">Confirm</button></div></div></div>
 
     <!-- Bottom Nav -->
     <div class="bottom-nav">
@@ -1006,402 +169,59 @@ class BYNAIBot:
         const ADSGRAM_BLOCK_ID = '28714';
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
-
         let isSpinning = false;
         const tgUser = tg.initDataUnsafe?.user;
         const telegramId = tgUser?.id ? String(tgUser.id) : null;
-        let cachedBalance = 0;
-        let userRefCode = '';
+        let cachedBalance = 0, userRefCode = '';
 
-        // ========== INIT ==========
         async function initUser() {
-            if (!telegramId) {
-                const saved = localStorage.getItem('pcs_balance');
-                if (saved) { cachedBalance = parseInt(saved); updateBalance(cachedBalance); }
-                return;
-            }
-            const urlParams = new URLSearchParams(window.location.search);
-            const refParam = urlParams.get('start') || '';
-            const referredBy = refParam.replace('ref', '');
+            if (!telegramId) { const s = localStorage.getItem('pcs_balance'); if (s) { cachedBalance = parseInt(s); updateBalance(cachedBalance); } return; }
+            const p = new URLSearchParams(window.location.search), refParam = p.get('start') || '', referredBy = refParam.replace('ref', '');
             try {
-                const res = await fetch(`${API_URL}/api/user/create`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegram_id: telegramId, username: tgUser?.username || '', first_name: tgUser?.first_name || 'User', referred_by: referredBy || null })
-                });
-                const data = await res.json();
-                if (data.user) {
-                    userRefCode = data.user.ref_code;
-                    cachedBalance = data.user.balance;
-                    updateBalance(cachedBalance);
-                    localStorage.setItem('pcs_balance', cachedBalance);
-                    document.getElementById('refLink').innerText = `https://t.me/paid_cash_suppiler_bot?start=ref${userRefCode}`;
-                    document.getElementById('refCount').innerText = data.user.ref_count || 0;
-                    document.getElementById('refEarnings').innerText = (data.user.ref_earnings || 0).toLocaleString();
-                    document.getElementById('adsWatched').innerText = data.user.ads_watched || 0;
-                }
-            } catch (e) { console.error('Init error:', e); }
+                const r = await fetch(`${API_URL}/api/user/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegram_id: telegramId, username: tgUser?.username || '', first_name: tgUser?.first_name || 'User', referred_by: referredBy || null }) });
+                const d = await r.json();
+                if (d.user) { userRefCode = d.user.ref_code; cachedBalance = d.user.balance; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); document.getElementById('refLink').innerText = `https://t.me/paid_cash_suppiler_bot?start=ref${userRefCode}`; document.getElementById('refCount').innerText = d.user.ref_count || 0; document.getElementById('refEarnings').innerText = (d.user.ref_earnings || 0).toLocaleString(); document.getElementById('adsWatched').innerText = d.user.ads_watched || 0; }
+            } catch (e) { console.error(e); }
         }
 
-        // ========== LOAD REF DETAILS ==========
         async function loadRefDetails() {
             if (!telegramId) return;
-            try {
-                const res = await fetch(`${API_URL}/api/user/${telegramId}/referrals`);
-                const data = await res.json();
-                if (!data || data.length === 0) {
-                    document.getElementById('refList').innerHTML = '<div class="no-data">No referrals yet</div>';
-                    return;
-                }
-                let html = '';
-                data.forEach(ref => {
-                    const date = ref.created_at ? new Date(ref.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?';
-                    html += `<div class="ref-detail-item">
-                        <div><span class="name">${ref.first_name || 'User'}</span><br><span class="date">Joined: ${date}</span></div>
-                        <span class="earned">+${(ref.total_earned || 0).toLocaleString()} coins</span>
-                    </div>`;
-                });
-                document.getElementById('refList').innerHTML = html;
-            } catch (e) { document.getElementById('refList').innerHTML = '<div class="no-data">Error loading</div>'; }
+            try { const r = await fetch(`${API_URL}/api/user/${telegramId}/referrals`); const d = await r.json(); if (!d || d.length === 0) { document.getElementById('refList').innerHTML = '<div class="no-data">No referrals yet</div>'; return; } let h = ''; d.forEach(ref => { const date = ref.created_at ? new Date(ref.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?'; h += `<div class="ref-detail-item"><div><span class="name">${ref.first_name || 'User'}</span><br><span class="date">Joined: ${date}</span></div><span class="earned">+${(ref.total_earned || 0).toLocaleString()} coins</span></div>`; }); document.getElementById('refList').innerHTML = h; } catch (e) { document.getElementById('refList').innerHTML = '<div class="no-data">Error</div>'; }
         }
 
-        async function claimReward(reward) {
-            if (!telegramId) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); return; }
-            try {
-                const res = await fetch(`${API_URL}/api/user/update-balance`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegram_id: telegramId, reward })
-                });
-                const data = await res.json();
-                if (data.balance !== undefined) { cachedBalance = data.balance; updateBalance(data.balance); localStorage.setItem('pcs_balance', data.balance); }
-            } catch (e) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); }
-        }
+        async function claimReward(reward) { if (!telegramId) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); return; } try { const r = await fetch(`${API_URL}/api/user/update-balance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegram_id: telegramId, reward }) }); const d = await r.json(); if (d.balance !== undefined) { cachedBalance = d.balance; updateBalance(d.balance); localStorage.setItem('pcs_balance', d.balance); } } catch (e) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); } }
 
-        async function submitWithdrawAPI(method, wallet, amount) {
-            if (!telegramId) { tg.showPopup({ message: '❌ Cannot connect' }); return false; }
-            try {
-                const res = await fetch(`${API_URL}/api/withdraw`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegram_id: telegramId, method, wallet_address: wallet, amount })
-                });
-                const data = await res.json();
-                if (data.error) { tg.showPopup({ message: '❌ ' + data.error }); return false; }
-                return true;
-            } catch (e) { tg.showPopup({ message: '❌ Network error' }); return false; }
-        }
+        async function submitWithdrawAPI(method, wallet, amount) { if (!telegramId) { tg.showPopup({ message: '❌ Cannot connect' }); return false; } try { const r = await fetch(`${API_URL}/api/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegram_id: telegramId, method, wallet_address: wallet, amount }) }); const d = await r.json(); if (d.error) { tg.showPopup({ message: '❌ ' + d.error }); return false; } return true; } catch (e) { tg.showPopup({ message: '❌ Network error' }); return false; } }
 
-        async function loadWithdrawHistory() {
-            if (!telegramId) { document.getElementById('historyList').innerHTML = '<div class="no-data">Login first</div>'; return; }
-            try {
-                const res = await fetch(`${API_URL}/api/withdrawals/${telegramId}`);
-                const data = await res.json();
-                if (!data || data.length === 0) { document.getElementById('historyList').innerHTML = '<div class="no-data">No withdrawals yet</div>'; return; }
-                let html = '';
-                data.forEach(w => {
-                    const date = new Date(w.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                    html += `<div class="history-item">
-                        <div class="history-info"><div class="method">${w.method.toUpperCase()}</div><div class="date">${date}</div></div>
-                        <div style="text-align:right;"><div style="color:#e65100;font-weight:700;">-${w.amount.toLocaleString()}</div><span class="status status-${w.status}">${w.status}</span></div>
-                    </div>`;
-                });
-                document.getElementById('historyList').innerHTML = html;
-            } catch (e) { document.getElementById('historyList').innerHTML = '<div class="no-data">Error</div>'; }
-        }
+        async function loadWithdrawHistory() { if (!telegramId) { document.getElementById('historyList').innerHTML = '<div class="no-data">Login first</div>'; return; } try { const r = await fetch(`${API_URL}/api/withdrawals/${telegramId}`); const d = await r.json(); if (!d || d.length === 0) { document.getElementById('historyList').innerHTML = '<div class="no-data">No withdrawals yet</div>'; return; } let h = ''; d.forEach(w => { const date = new Date(w.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); h += `<div class="history-item"><div class="history-info"><div class="method">${w.method.toUpperCase()}</div><div class="date">${date}</div></div><div style="text-align:right;"><div style="color:#e65100;font-weight:700;">-${w.amount.toLocaleString()}</div><span class="status status-${w.status}">${w.status}</span></div></div>`; }); document.getElementById('historyList').innerHTML = h; } catch (e) { document.getElementById('historyList').innerHTML = '<div class="no-data">Error</div>'; } }
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            const el = document.getElementById('tab-' + tab);
-            if (el) el.classList.add('active');
-            const nav = document.querySelector(`[data-tab="${tab}"]`);
-            if (nav) nav.classList.add('active');
-            if (tab === 'wallet') {
-                document.getElementById('wallet-main').style.display = 'block';
-                document.getElementById('withdraw-form').style.display = 'none';
-                document.getElementById('success-screen').classList.remove('show');
-            }
-            if (tab === 'ref') loadRefDetails();
-        }
+        function switchTab(tab) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); const el = document.getElementById('tab-' + tab); if (el) el.classList.add('active'); const nav = document.querySelector(`[data-tab="${tab}"]`); if (nav) nav.classList.add('active'); if (tab === 'wallet') { document.getElementById('wallet-main').style.display = 'block'; document.getElementById('withdraw-form').style.display = 'none'; document.getElementById('success-screen').classList.remove('show'); } if (tab === 'ref') loadRefDetails(); }
+        function copyRef() { const refLink = document.getElementById('refLink').innerText; const text = `💎 Earn Free = No investment Crypto on Telegram\n\n✅ Bot Features:\n• Claim Unlimited Money by Watching Simple Ads\n• Rewards Per Claim Random 10-500 coin\n• Withdraw Very Low Only 1$\n• Payment to Crypto/Paypal\n• Payment Process Fast Hourly 24/7\n• Unlimited Ads Everyday Earn As Much As You Want\n\n👇 Click Start Claim Unlimited Below to Start Earn Unlimited Money 👇\n${refLink}`; navigator.clipboard.writeText(text); tg.showPopup({ message: '✅ Ref link copied!' }); }
+        function updateBalance(newBal) { document.getElementById('balance').innerText = newBal.toLocaleString(); document.getElementById('balanceUsd').innerText = (newBal / 100000).toFixed(2); document.getElementById('formBalance').innerText = newBal.toLocaleString(); }
+        function getRandomReward() { const r = Math.random() * 100; if (r < 70) return Math.floor(Math.random() * 51) + 10; if (r < 90) return Math.floor(Math.random() * 61) + 60; if (r < 96) return Math.floor(Math.random() * 31) + 120; if (r < 99) return Math.floor(Math.random() * 31) + 150; return Math.floor(Math.random() * 21) + 180; }
+        function findFactors(target) { const pairs = []; for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) if (a * b === target) pairs.push([a, b]); if (pairs.length > 0) return pairs[Math.floor(Math.random() * pairs.length)]; let best = [1, 1], bestDiff = Infinity; for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) { const d = Math.abs(a * b - target); if (d < bestDiff) { bestDiff = d; best = [a, b]; } } return best; }
 
-        function copyRef() {
-            const refLink = document.getElementById('refLink').innerText;
-            const text = `💎 Earn Free = No investment Crypto on Telegram\n\n✅ Bot Features:\n• Claim Unlimited Money by Watching Simple Ads\n• Rewards Per Claim Random 10-500 coin\n• Withdraw Very Low Only 1$\n• Payment to Crypto/Paypal\n• Payment Process Fast Hourly 24/7\n• Unlimited Ads Everyday Earn As Much As You Want\n\n👇 Click Start Claim Unlimited Below to Start Earn Unlimited Money 👇\n${refLink}`;
-            navigator.clipboard.writeText(text);
-            tg.showPopup({ message: '✅ Ref link copied!' });
-        }
-
-        function updateBalance(newBal) {
-            document.getElementById('balance').innerText = newBal.toLocaleString();
-            document.getElementById('balanceUsd').innerText = (newBal / 100000).toFixed(2);
-            document.getElementById('formBalance').innerText = newBal.toLocaleString();
-        }
-
-        function getRandomReward() {
-            const r = Math.random() * 100;
-            if (r < 70) return Math.floor(Math.random() * 51) + 10;
-            if (r < 90) return Math.floor(Math.random() * 61) + 60;
-            if (r < 96) return Math.floor(Math.random() * 31) + 120;
-            if (r < 99) return Math.floor(Math.random() * 31) + 150;
-            return Math.floor(Math.random() * 21) + 180;
-        }
-
-        function findFactors(target) {
-            const pairs = [];
-            for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) if (a * b === target) pairs.push([a, b]);
-            if (pairs.length > 0) return pairs[Math.floor(Math.random() * pairs.length)];
-            let best = [1, 1], bestDiff = Infinity;
-            for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) {
-                const d = Math.abs(a * b - target);
-                if (d < bestDiff) { bestDiff = d; best = [a, b]; }
-            }
-            return best;
-        }
-
-        // ========== SPIN + ADSGRAM ==========
-        // ========== SPIN + ADSGRAM (CHỈ SPIN KHI XEM HẾT ADS) ==========
         function showAdsgramThenSpin(btn) {
             try {
                 const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
+                const timeout = setTimeout(() => { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); }, 20000);
+                AdController.show().then((result) => { clearTimeout(timeout); if (result && result.done) { doSpin(btn); } else { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ Not Completed', message: 'You must watch the full ad to earn coins!' }); } }).catch((error) => { clearTimeout(timeout); btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); });
+            } catch (e) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ Error', message: 'Cannot load ads.' }); }
+        }
 
-                // Timeout 20s - nếu không có quảng cáo thì báo lỗi
-                const timeout = setTimeout(() => {
-                    console.log('Ad timeout - no ad available');
-                    btn.style.opacity = '1';
-                    btn.innerText = '🎰 SPIN & EARN';
-                    isSpinning = false;
-                    tg.showPopup({
-                        title: '⚠️ No Ads Available',
-                        message: 'No ads available at the moment. Please try again later.'
-                    });
-                }, 20000);
+        function spinSlots() { if (isSpinning) return; isSpinning = true; const btn = document.getElementById('spinBtn'); btn.style.opacity = '0.6'; btn.innerText = '📺 LOADING AD...'; document.getElementById('congratsText').innerText = ''; showAdsgramThenSpin(btn); }
+        function doSpin(btn) { btn.innerText = '🎰 SPINNING...'; document.getElementById('slotResult').innerText = '?'; const s1 = document.getElementById('slot1'), s2 = document.getElementById('slot2'); s1.classList.add('spinning'); s2.classList.add('spinning'); const interval = setInterval(() => { s1.innerText = Math.floor(Math.random() * 20) + 1; s2.innerText = Math.floor(Math.random() * 10) + 1; }, 100); setTimeout(() => { clearInterval(interval); s1.classList.remove('spinning'); s2.classList.remove('spinning'); const reward = getRandomReward(); const [a, b] = findFactors(reward); s1.innerText = a; s2.innerText = b; document.getElementById('slotResult').innerText = reward; cachedBalance += reward; updateBalance(cachedBalance); document.getElementById('adsWatched').innerText = parseInt(document.getElementById('adsWatched').innerText) + 1; document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`; claimReward(reward); btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; }, 2000); }
 
-                AdController.show()
-                    .then((result) => {
-                        clearTimeout(timeout);
-                        // Kiểm tra xem user đã xem hết quảng cáo chưa
-                        if (result && result.done) {
-                            console.log('Ad fully watched, rewarding...');
-                            doSpin(btn);
-                        } else {
-                            // User chưa xem hết hoặc đóng quảng cáo sớm
-                            console.log('Ad not completed:', result);
-                            btn.style.opacity = '1';
-                            btn.innerText = '🎰 SPIN & EARN';
-                            isSpinning = false;
-                            tg.showPopup({
-                                title: '⚠️ Ad Not Completed',
-                                message: 'You must watch the full ad to earn coins. Please try again.'
-                            });
-                        }
-                    })
-                    .catch((error) => {
-                        clearTimeout(timeout);
-                        console.log('Ad error:', error);
-                        btn.style.opacity = '1';
-                        btn.innerText = '🎰 SPIN & EARN';
-                        isSpinning = false;
-
-                        // Kiểm tra loại lỗi
-                        const errMsg = error?.description || '';
-                        if (errMsg.includes('No ads available') || errMsg.includes('no ad')) {
-                            tg.showPopup({
-                                title: '⚠️ No Ads Available',
-                                message: 'No ads available at the moment. Please try again later.'
-                            });
-                        } else {
-                            tg.showPopup({
-                                title: '⚠️ Ad Error',
-                                message: 'Failed to load ad. Please try again.'
-                            });
-                        }
-                    });
-            } catch (e) {
-                console.error('Adsgram init error:', e);
-                btn.style.opacity = '1';
-                btn.innerText = '🎰 SPIN & EARN';
-                isSpinning = false;
-                tg.showPopup({
-                    title: '⚠️ Error',
-                    message: 'Cannot load ads. Please try again later.'
-                });
-            }
-        }
-        // ========== WITHDRAW UI ==========
-        function showWithdrawForm() {
-            document.getElementById('wallet-main').style.display = 'none';
-            document.getElementById('withdraw-form').style.display = 'block';
-            document.getElementById('success-screen').classList.remove('show');
-            updateMethod(); clearErrors();
-        }
-        function cancelWithdraw() {
-            document.getElementById('wallet-main').style.display = 'block';
-            document.getElementById('withdraw-form').style.display = 'none';
-        }
-        function backToWallet() {
-            document.getElementById('wallet-main').style.display = 'block';
-            document.getElementById('withdraw-form').style.display = 'none';
-            document.getElementById('success-screen').classList.remove('show');
-        }
-        function updateMethod() {
-            const m = document.getElementById('paymentMethod').value;
-            const l = document.getElementById('walletLabel');
-            const i = document.getElementById('walletAddress');
-            if (m === 'usdt') { l.innerText = 'USDT Wallet Address (BEP20)'; i.placeholder = '0x...'; }
-            else { l.innerText = m === 'paypal' ? 'PayPal Email' : 'FaucetPay Email'; i.placeholder = 'Enter email'; }
-        }
-        function clearErrors() {
-            document.getElementById('walletError').style.display = 'none';
-            document.getElementById('amountError').style.display = 'none';
-        }
-        function confirmWithdraw() {
-            clearErrors();
-            const m = document.getElementById('paymentMethod').value;
-            const w = document.getElementById('walletAddress').value.trim();
-            const a = parseInt(document.getElementById('withdrawAmount').value);
-            let ok = true;
-            if (!w || w.length < 5) { document.getElementById('walletError').innerText = 'Enter valid address/email'; document.getElementById('walletError').style.display = 'block'; ok = false; }
-            if (!a || a < 100000) { document.getElementById('amountError').innerText = 'Min 100,000 coins'; document.getElementById('amountError').style.display = 'block'; ok = false; }
-            else if (a > cachedBalance) { document.getElementById('amountError').innerText = 'Not enough coins!'; document.getElementById('amountError').style.display = 'block'; ok = false; }
-            if (!ok) return;
-            document.getElementById('confirmMethod').innerText = m.toUpperCase();
-            document.getElementById('confirmWallet').innerText = w.length > 24 ? w.substring(0, 24) + '...' : w;
-            document.getElementById('confirmAmount').innerText = a.toLocaleString();
-            document.getElementById('confirmOverlay').classList.add('show');
-        }
+        function showWithdrawForm() { document.getElementById('wallet-main').style.display = 'none'; document.getElementById('withdraw-form').style.display = 'block'; document.getElementById('success-screen').classList.remove('show'); updateMethod(); clearErrors(); }
+        function cancelWithdraw() { document.getElementById('wallet-main').style.display = 'block'; document.getElementById('withdraw-form').style.display = 'none'; }
+        function backToWallet() { document.getElementById('wallet-main').style.display = 'block'; document.getElementById('withdraw-form').style.display = 'none'; document.getElementById('success-screen').classList.remove('show'); }
+        function updateMethod() { const m = document.getElementById('paymentMethod').value; const l = document.getElementById('walletLabel'); const i = document.getElementById('walletAddress'); if (m === 'usdt') { l.innerText = 'USDT Wallet Address (BEP20)'; i.placeholder = '0x...'; } else { l.innerText = m === 'paypal' ? 'PayPal Email' : 'FaucetPay Email'; i.placeholder = 'Enter email'; } }
+        function clearErrors() { document.getElementById('walletError').style.display = 'none'; document.getElementById('amountError').style.display = 'none'; }
+        function confirmWithdraw() { clearErrors(); const m = document.getElementById('paymentMethod').value; const w = document.getElementById('walletAddress').value.trim(); const a = parseInt(document.getElementById('withdrawAmount').value); let ok = true; if (!w || w.length < 5) { document.getElementById('walletError').innerText = 'Enter valid address/email'; document.getElementById('walletError').style.display = 'block'; ok = false; } if (!a || a < 100000) { document.getElementById('amountError').innerText = 'Min 100,000 coins'; document.getElementById('amountError').style.display = 'block'; ok = false; } else if (a > cachedBalance) { document.getElementById('amountError').innerText = 'Not enough coins!'; document.getElementById('amountError').style.display = 'block'; ok = false; } if (!ok) return; document.getElementById('confirmMethod').innerText = m.toUpperCase(); document.getElementById('confirmWallet').innerText = w.length > 24 ? w.substring(0, 24) + '...' : w; document.getElementById('confirmAmount').innerText = a.toLocaleString(); document.getElementById('confirmOverlay').classList.add('show'); }
         function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('show'); }
-        async function processWithdraw() {
-            const m = document.getElementById('paymentMethod').value;
-            const w = document.getElementById('walletAddress').value.trim();
-            const a = parseInt(document.getElementById('withdrawAmount').value);
-            const ok = await submitWithdrawAPI(m, w, a);
-            if (ok) {
-                cachedBalance -= a; updateBalance(cachedBalance);
-                localStorage.setItem('pcs_balance', cachedBalance);
-                document.getElementById('confirmOverlay').classList.remove('show');
-                document.getElementById('withdraw-form').style.display = 'none';
-                document.getElementById('success-screen').classList.add('show');
-                document.getElementById('walletAddress').value = '';
-                document.getElementById('withdrawAmount').value = '';
-            } else { document.getElementById('confirmOverlay').classList.remove('show'); }
-        }
+        async function processWithdraw() { const m = document.getElementById('paymentMethod').value; const w = document.getElementById('walletAddress').value.trim(); const a = parseInt(document.getElementById('withdrawAmount').value); const ok = await submitWithdrawAPI(m, w, a); if (ok) { cachedBalance -= a; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); document.getElementById('confirmOverlay').classList.remove('show'); document.getElementById('withdraw-form').style.display = 'none'; document.getElementById('success-screen').classList.add('show'); document.getElementById('walletAddress').value = ''; document.getElementById('withdrawAmount').value = ''; } else { document.getElementById('confirmOverlay').classList.remove('show'); } }
 
         initUser();
     </script>
 </body>
 </html>
-                line = f"XP: {s['xp']} | Keys: {s['keys']} | Tickets: {s['tickets']} | USDT: ${s['usdt']:.2f} | {refresh_status}"
-                if s['claimable']:
-                    line += " | HOURLY READY"
-                else:
-                    line += f" | Next: {self.format_time(self.get_wait(s['next_claim']))}"
-                
-                log_acc_update(self.acc_id, line)
-                
-                now = time.time()
-                
-                if self.last_checkin_check is None or now - self.last_checkin_check > 3600:
-                    if not s.get("checked_in_today", True):
-                        if self.checkin():
-                            log_acc_update(self.acc_id, "Check-in ✓")
-                    self.last_checkin_check = now
-                
-                if now - self.last_mission_check > 1800:
-                    self.do_follow_x_mission()
-                    claimed = self.claim_all_missions()
-                    if claimed > 0:
-                        log_acc_update(self.acc_id, f"Claimed {claimed} mission(s)")
-                    self.last_mission_check = now
-                
-                # ========== ƯU TIÊN HÀNH ĐỘNG ==========
-                
-                # 1. LUÔN KIỂM TRA VÀ MỞ BOX NẾU CÓ (ưu tiên cao nhất)
-                if self.has_boxes_to_open():
-                    self.open_all_boxes()
-                    continue
-                
-                # 2. Claim vé miễn phí
-                if s['claimable']:
-                    self.claim_hourly_ticket()
-                    continue
-                
-                # 3. Spin wheel
-                if s['tickets'] > 0:
-                    self.spin_wheel()
-                    continue
-                
-                # 4. Mua Box S (keys >= 1, XP >= 600)
-                if s['keys'] >= 1:
-                    if s['xp'] >= 600:
-                        if self.buy_mystery_box_s():
-                            continue
-                
-                # 5. Mua ticket (keys = 0, XP >= 500)
-                elif s['keys'] == 0:
-                    if s['xp'] >= 500:
-                        if self.buy_ticket():
-                            continue
-                
-                wait_time = min(self.get_wait(s['next_claim']), 5)
-                if wait_time <= 0:
-                    wait_time = 5
-                self.smart_sleep(wait_time)
-                
-            except KeyboardInterrupt:
-                break
-            except Exception as e:
-                error_count += 1
-                self.smart_sleep(5)
-
-
-def load_accounts():
-    accounts = []
-    paths = ["link.txt", "D:\\knoi\\link.txt"]
-    for p in paths:
-        if os.path.exists(p):
-            with open(p, 'r', encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if line.startswith("http"):
-                        accounts.append(line)
-            if accounts:
-                print(f"Loaded {len(accounts)} accounts from: {p}")
-                break
-    return accounts
-
-
-def main():
-    global bots, threads
-    signal.signal(signal.SIGINT, signal_handler)
-    
-    load_tokens()
-    
-    print("=" * 60)
-    print("BYNAI Auto Bot")
-    print("=" * 60)
-    
-    accounts = load_accounts()
-    if not accounts:
-        print("ERROR: khong tim thay link.txt")
-        return
-    
-    print(f"Accounts: {len(accounts)}")
-    print("=" * 60)
-    print()
-    
-    for i, link in enumerate(accounts):
-        bot = BYNAIBot(link, f"ACC{i+1:02d}", i * 2, account_index=i)
-        bots.append(bot)
-        t = threading.Thread(target=bot.run)
-        t.daemon = True
-        t.start()
-        threads.append(t)
-        time.sleep(1)
-    
-    try:
-        while not shutdown_flag.is_set():
-            time.sleep(1)
-    except KeyboardInterrupt:
-        pass
-
-
-if __name__ == "__main__":
-    main()
