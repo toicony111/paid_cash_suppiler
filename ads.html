@@ -160,6 +160,7 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
         let isSpinning = false;
+        let adTimeout = null;
         const tgUser = tg.initDataUnsafe?.user;
         const telegramId = tgUser?.id ? String(tgUser.id) : null;
         let cachedBalance = 0, userRefCode = '';
@@ -191,14 +192,47 @@
         function getRandomReward() { const r = Math.random() * 100; if (r < 70) return Math.floor(Math.random() * 51) + 10; if (r < 90) return Math.floor(Math.random() * 61) + 60; if (r < 96) return Math.floor(Math.random() * 31) + 120; if (r < 99) return Math.floor(Math.random() * 31) + 150; return Math.floor(Math.random() * 21) + 180; }
         function findFactors(target) { const pairs = []; for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) if (a * b === target) pairs.push([a, b]); if (pairs.length > 0) return pairs[Math.floor(Math.random() * pairs.length)]; let best = [1, 1], bestDiff = Infinity; for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) { const d = Math.abs(a * b - target); if (d < bestDiff) { bestDiff = d; best = [a, b]; } } return best; }
 
+        function resetSpin() {
+            if (adTimeout) { clearTimeout(adTimeout); adTimeout = null; }
+            const btn = document.getElementById('spinBtn');
+            btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN';
+            isSpinning = false;
+        }
+
         function showAdsgramThenSpin(btn) {
             try {
                 const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
-                const timeout = setTimeout(() => {
-                    if (isSpinning) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); }
-                }, 30000);
-                AdController.show().then((result) => { clearTimeout(timeout); if (isSpinning && result && result.done) { doSpin(btn); } else if (isSpinning) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; if (!result || !result.done) { tg.showPopup({ title: '⚠️ Not Completed', message: 'Watch the full ad to earn!' }); } } }).catch((error) => { clearTimeout(timeout); if (isSpinning) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; const errMsg = error?.description || ''; if (!errMsg.includes('skip') && !errMsg.includes('close')) { tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); } } });
-            } catch (e) { if (isSpinning) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; } }
+
+                // Chỉ set timeout 60s - nếu sau 60s không có phản hồi gì mới báo lỗi
+                adTimeout = setTimeout(() => {
+                    if (isSpinning) { resetSpin(); tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); }
+                }, 60000);
+
+                AdController.show()
+                    .then((result) => {
+                        clearTimeout(adTimeout);
+                        adTimeout = null;
+                        if (isSpinning && result && result.done) {
+                            doSpin(btn);
+                        } else if (isSpinning) {
+                            resetSpin();
+                        }
+                    })
+                    .catch((error) => {
+                        clearTimeout(adTimeout);
+                        adTimeout = null;
+                        if (isSpinning) {
+                            resetSpin();
+                            const errMsg = error?.description || '';
+                            // Chỉ hiện pop-up nếu thực sự không có ads
+                            if (errMsg.includes('No ad') || errMsg.includes('No available') || errMsg.includes('no ad')) {
+                                tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' });
+                            }
+                        }
+                    });
+            } catch (e) {
+                if (isSpinning) { resetSpin(); }
+            }
         }
 
         function spinSlots() { if (isSpinning) return; isSpinning = true; const btn = document.getElementById('spinBtn'); btn.style.opacity = '0.6'; btn.innerText = '📺 LOADING AD...'; document.getElementById('congratsText').innerText = ''; showAdsgramThenSpin(btn); }
