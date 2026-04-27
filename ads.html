@@ -18,11 +18,29 @@
             min-height: 100vh;
             padding-bottom: 90px;
         }
-        .header { text-align: center; padding: 25px 20px 5px; font-size: 26px; font-weight: 800; color: #2e7d32; }
-        .subtitle { text-align: center; color: #4caf50; font-size: 13px; font-weight: 500; margin-bottom: 15px; }
+        .header {
+            text-align: center;
+            padding: 25px 20px 5px;
+            font-size: 26px;
+            font-weight: 800;
+            color: #2e7d32;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #4caf50;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
         .balance-card {
-            background: white; margin: 10px 15px; padding: 22px; border-radius: 24px;
-            text-align: center; box-shadow: 0 4px 24px rgba(46,125,50,0.12); border: 1px solid #c8e6c9;
+            background: white;
+            margin: 10px 15px;
+            padding: 22px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.12);
+            border: 1px solid #c8e6c9;
         }
         .balance-label { color: #66bb6a; font-size: 13px; font-weight: 600; }
         .balance-amount { font-size: 44px; font-weight: 800; color: #2e7d32; }
@@ -37,86 +55,151 @@
         .btn-green { background: linear-gradient(135deg, #43a047, #2e7d32); color: white; box-shadow: 0 4px 16px rgba(46,125,50,0.25); }
         .btn-outline { background: white; border: 2px solid #43a047; color: #2e7d32; }
         .btn-gold { background: linear-gradient(135deg, #ffb300, #ff8f00); color: #fff; box-shadow: 0 4px 16px rgba(255,143,0,0.3); }
-        .withdraw-card { background: white; border-radius: 24px; padding: 24px; margin: 10px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); }
+        .withdraw-card {
+            background: white; border-radius: 24px; padding: 24px; margin: 10px 0;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.1);
+        }
         .withdraw-card h3 { text-align: center; margin-bottom: 20px; color: #2e7d32; font-size: 20px; }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; color: #388e3c; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
         .form-group select, .form-group input {
             width: 100%; padding: 14px 16px; background: #f1f8e9; border: 2px solid #c8e6c9;
-            border-radius: 14px; color: #1b5e20; font-size: 15px; outline: none;
+            border-radius: 14px; color: #1b5e20; font-size: 15px; outline: none; transition: 0.2s;
         }
         .form-group select:focus, .form-group input:focus { border-color: #43a047; }
         .hint { display: flex; justify-content: space-between; color: #81c784; font-size: 12px; margin-top: 4px; }
         .error-msg { color: #e53935; font-size: 12px; margin-top: 4px; display: none; font-weight: 600; }
-        .rate-info { text-align: center; background: #f1f8e9; padding: 10px; border-radius: 10px; margin-bottom: 16px; color: #388e3c; font-weight: 600; }
-        .slots-container { background: white; border-radius: 24px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center; }
-        .slot-row { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 8px 0; font-size: 28px; font-weight: 800; }
+        .rate-info {
+            text-align: center; background: #f1f8e9; padding: 10px; border-radius: 10px;
+            margin-bottom: 16px; color: #388e3c; font-weight: 600; font-size: 14px;
+        }
+        .slots-container {
+            background: white; border-radius: 24px; padding: 20px; margin: 15px 0;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center;
+        }
+        .slot-row {
+            display: flex; justify-content: center; align-items: center;
+            gap: 12px; margin: 8px 0; font-size: 28px; font-weight: 800;
+        }
         .slot-box {
             width: 70px; height: 70px; background: linear-gradient(135deg, #fff9c4, #fff176);
             border: 3px solid #ffb300; border-radius: 16px; display: flex; align-items: center;
-            justify-content: center; font-size: 30px; color: #e65100; box-shadow: 0 4px 12px rgba(255,179,0,0.2);
+            justify-content: center; font-size: 30px; color: #e65100;
+            box-shadow: 0 4px 12px rgba(255,179,0,0.2); transition: 0.1s;
         }
         .slot-box.spinning { animation: slotSpin 0.15s infinite; }
-        @keyframes slotSpin { 0% { transform: translateY(-4px); } 50% { transform: translateY(4px); } 100% { transform: translateY(-4px); } }
+        @keyframes slotSpin {
+            0% { transform: translateY(-4px); } 50% { transform: translateY(4px); } 100% { transform: translateY(-4px); }
+        }
         .slot-op { font-size: 24px; color: #2e7d32; }
         .slot-eq { font-size: 24px; color: #43a047; }
         .slot-result {
             width: 80px; height: 70px; background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
             border: 3px solid #43a047; border-radius: 16px; display: flex; align-items: center;
-            justify-content: center; font-size: 28px; color: #1b5e20; box-shadow: 0 4px 12px rgba(46,125,50,0.2);
+            justify-content: center; font-size: 28px; color: #1b5e20;
+            box-shadow: 0 4px 12px rgba(46,125,50,0.2);
         }
         .congrats-text { color: #2e7d32; font-weight: 700; font-size: 16px; margin-top: 8px; min-height: 24px; }
         .odds-info { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; font-size: 10px; color: #81c784; }
         .odds-chip { background: white; padding: 4px 10px; border-radius: 20px; border: 1px solid #c8e6c9; font-weight: 600; }
-        .ref-card { background: white; border-radius: 24px; padding: 20px; margin: 10px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center; }
-        .ref-link-box { background: #f1f8e9; padding: 14px; border-radius: 12px; margin: 10px 0; word-break: break-all; font-size: 13px; color: #2e7d32; border: 2px dashed #81c784; }
+        .ref-card {
+            background: white; border-radius: 24px; padding: 20px; margin: 10px 0;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center;
+        }
+        .ref-link-box {
+            background: #f1f8e9; padding: 14px; border-radius: 12px; margin: 10px 0;
+            word-break: break-all; font-size: 13px; color: #2e7d32; border: 2px dashed #81c784; font-weight: 500;
+        }
         .ref-stats { display: flex; justify-content: space-around; margin-top: 15px; gap: 10px; }
         .ref-stat { text-align: center; background: #f1f8e9; padding: 14px; border-radius: 14px; flex: 1; }
         .ref-stat .num { font-size: 22px; font-weight: 800; color: #2e7d32; }
         .ref-stat .lbl { color: #66bb6a; font-size: 12px; }
-        .about-card { background: white; border-radius: 24px; padding: 24px; margin: 10px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); }
-        .about-card h3 { color: #2e7d32; margin-bottom: 16px; }
-        .about-card h4 { color: #388e3c; margin: 14px 0 6px; }
-        .about-card p, .about-card li { color: #4a7c4f; font-size: 14px; line-height: 1.6; }
-        .contact-box { background: #f1f8e9; padding: 14px; border-radius: 12px; text-align: center; margin-top: 16px; border: 2px solid #c8e6c9; }
-        .contact-box a { color: #2e7d32; font-weight: 700; text-decoration: none; }
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px;
-            display: flex; background: white; border-top: 1px solid #c8e6c9; z-index: 10; box-shadow: 0 -2px 16px rgba(0,0,0,0.05);
+        .about-card {
+            background: white; border-radius: 24px; padding: 24px; margin: 10px 0;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.1);
         }
-        .nav-item { flex: 1; padding: 12px 8px; text-align: center; cursor: pointer; color: #81c784; font-size: 11px; font-weight: 600; }
+        .about-card h3 { color: #2e7d32; margin-bottom: 16px; font-size: 20px; }
+        .about-card h4 { color: #388e3c; margin: 14px 0 6px; font-size: 15px; }
+        .about-card p, .about-card li { color: #4a7c4f; font-size: 14px; line-height: 1.6; }
+        .about-card ul { padding-left: 20px; margin: 8px 0; }
+        .about-card ul li { margin: 4px 0; }
+        .contact-box {
+            background: #f1f8e9; padding: 14px; border-radius: 12px; text-align: center;
+            margin-top: 16px; border: 2px solid #c8e6c9;
+        }
+        .contact-box a { color: #2e7d32; font-weight: 700; text-decoration: none; font-size: 15px; }
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 500px; display: flex; background: white;
+            border-top: 1px solid #c8e6c9; z-index: 10;
+            box-shadow: 0 -2px 16px rgba(0,0,0,0.05); overflow-x: auto;
+        }
+        .nav-item {
+            flex: 1; min-width: 70px; padding: 12px 8px; text-align: center;
+            cursor: pointer; color: #81c784; font-size: 11px; font-weight: 600;
+            transition: 0.2s; white-space: nowrap;
+        }
         .nav-item.active { color: #2e7d32; }
         .nav-icon { font-size: 18px; display: block; margin-bottom: 2px; }
         .info-row { display: flex; gap: 10px; margin: 12px 0; }
-        .info-chip { flex: 1; background: white; padding: 14px; border-radius: 16px; text-align: center; box-shadow: 0 2px 12px rgba(46,125,50,0.08); }
-        .info-chip .val { color: #2e7d32; font-weight: 800; }
-        .info-chip .lbl { color: #81c784; font-size: 11px; }
-        .confirm-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(27,94,32,0.5); z-index: 100; justify-content: center; align-items: center; }
+        .info-chip {
+            flex: 1; background: white; padding: 14px; border-radius: 16px;
+            text-align: center; box-shadow: 0 2px 12px rgba(46,125,50,0.08);
+        }
+        .info-chip .val { color: #2e7d32; font-weight: 800; font-size: 16px; }
+        .info-chip .lbl { color: #81c784; font-size: 11px; margin-top: 2px; }
+        .confirm-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(27,94,32,0.5); z-index: 100; justify-content: center; align-items: center;
+        }
         .confirm-overlay.show { display: flex; }
-        .confirm-box { background: white; padding: 24px; border-radius: 24px; width: 90%; max-width: 360px; text-align: center; }
-        .confirm-box p { margin: 6px 0; color: #388e3c; }
-        .confirm-val { color: #1b5e20; font-weight: 700; }
+        .confirm-box {
+            background: white; padding: 24px; border-radius: 24px; width: 90%;
+            max-width: 360px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); text-align: center;
+        }
+        .confirm-box p { margin: 6px 0; color: #388e3c; font-size: 14px; }
+        .confirm-box .confirm-val { color: #1b5e20; font-weight: 700; }
         .confirm-btns { display: flex; gap: 10px; margin-top: 18px; }
-        .confirm-btns button { flex: 1; padding: 14px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; }
+        .confirm-btns button { flex: 1; padding: 14px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; }
         .btn-cancel { background: #e8f5e9; color: #2e7d32; }
         .btn-confirm { background: #43a047; color: white; }
-        .success-screen { display: none; text-align: center; padding: 30px 20px; background: white; border-radius: 24px; margin-top: 10px; }
+        .success-screen {
+            display: none; text-align: center; padding: 30px 20px; background: white;
+            border-radius: 24px; margin-top: 10px;
+        }
         .success-screen.show { display: block; }
-        .history-card { background: white; border-radius: 24px; padding: 18px; margin: 12px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #e8f5e9; }
+        .success-screen .icon { font-size: 50px; margin-bottom: 12px; }
+        .success-screen h3 { color: #2e7d32; margin-bottom: 6px; }
+        .success-screen p { color: #66bb6a; font-size: 14px; }
+
+        /* Withdraw History */
+        .history-card {
+            background: white; border-radius: 24px; padding: 18px; margin: 12px 0;
+            box-shadow: 0 4px 24px rgba(46,125,50,0.1);
+        }
+        .history-card h4 { color: #2e7d32; margin-bottom: 12px; }
+        .history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; border-bottom: 1px solid #e8f5e9;
+        }
         .history-item:last-child { border-bottom: none; }
         .history-info .method { font-weight: 700; color: #2e7d32; font-size: 14px; }
         .history-info .date { font-size: 11px; color: #81c784; }
-        .status { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .history-amount { font-weight: 700; font-size: 16px; }
+        .status {
+            padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+        }
         .status-pending { background: #fff9c4; color: #e65100; }
         .status-completed { background: #c8e6c9; color: #2e7d32; }
         .status-rejected { background: #ffcdd2; color: #c62828; }
-        .no-data { text-align: center; color: #81c784; padding: 20px; }
+        .no-data { text-align: center; color: #81c784; padding: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
+
     <div class="header">💵 Paid Cash Supplier</div>
     <div class="subtitle">Earn Free Crypto on Telegram</div>
+
     <div class="balance-card">
         <div class="balance-label">💰 YOUR BALANCE</div>
         <div class="balance-amount" id="balance">0</div>
@@ -134,6 +217,7 @@
             <button class="btn btn-green" onclick="showWithdrawForm()">💸 Withdraw Now</button>
             <button class="btn btn-outline" onclick="loadWithdrawHistory(); switchTab('history');" style="margin-top:8px;">📋 Withdraw History</button>
         </div>
+
         <div id="withdraw-form" style="display:none;">
             <div class="withdraw-card">
                 <h3>💸 Withdraw Funds</h3>
@@ -148,7 +232,7 @@
                 </div>
                 <div class="form-group">
                     <label id="walletLabel">USDT Wallet Address (BEP20)</label>
-                    <input type="text" id="walletAddress" placeholder="Enter your USDT BEP20 address (0x...)">
+                    <input type="text" id="walletAddress" placeholder="Enter your USDT BEP20 wallet address (0x...)">
                     <div class="error-msg" id="walletError"></div>
                 </div>
                 <div class="form-group">
@@ -161,6 +245,7 @@
                 <button class="btn btn-outline" onclick="cancelWithdraw()" style="margin-top:6px;">← Back to Wallet</button>
             </div>
         </div>
+
         <div class="success-screen" id="success-screen">
             <div class="icon">✅</div>
             <h3>Withdrawal Submitted!</h3>
@@ -181,8 +266,8 @@
     <!-- Tab Earn -->
     <div class="tab-content" id="tab-ads">
         <div class="slots-container">
-            <p style="color:#66bb6a; font-weight:600;">🎰 SPIN & EARN</p>
-            <p style="color:#81c784; font-size:13px; margin-bottom:12px;">Ads watched today: <span id="adsWatched">0</span></p>
+            <p style="color:#66bb6a; font-weight:600; margin-bottom:5px;">🎰 SPIN & EARN</p>
+            <p style="color:#81c784; font-size:13px; margin-bottom:12px;">Ads watched today: <span id="adsWatched" style="font-weight:700;">0</span></p>
             <div class="slot-row">
                 <div class="slot-box" id="slot1">?</div>
                 <span class="slot-op">×</span>
@@ -206,7 +291,7 @@
     <div class="tab-content" id="tab-ref">
         <div class="ref-card">
             <h3 style="color:#2e7d32;">👥 Invite Friends</h3>
-            <p style="color:#66bb6a;">Earn 10% from referrals</p>
+            <p style="color:#66bb6a; margin:8px 0;">Earn 10% from referrals</p>
             <div class="ref-link-box" id="refLink">Loading...</div>
             <button class="btn btn-green" onclick="copyRef()">📋 Copy Link</button>
             <div class="ref-stats">
@@ -221,9 +306,25 @@
         <div class="about-card">
             <h3>📋 About & Contact Us</h3>
             <h4>📜 Terms of Service</h4>
-            <ul><li>Users must be at least 18 years old.</li><li>Any fraudulent activity is strictly prohibited.</li><li>We reserve the right to ban violators.</li><li>Each user is allowed only one account.</li></ul>
+            <ul>
+                <li>Users must be at least 18 years old to participate.</li>
+                <li>Any fraudulent activity is strictly prohibited.</li>
+                <li>We reserve the right to ban any account violating our rules.</li>
+                <li>Each user is allowed only one account.</li>
+                <li>All earnings are subject to review before withdrawal.</li>
+            </ul>
+            <h4>🚫 Prohibited Activities</h4>
+            <ul>
+                <li>Using bots, emulators, or automated scripts.</li>
+                <li>VPN/proxy abuse to fake location.</li>
+                <li>Creating multiple accounts for referral fraud.</li>
+                <li>Exploiting system bugs.</li>
+            </ul>
             <h4>📞 Contact Admin</h4>
-            <div class="contact-box"><a href="https://t.me/duytoiktol" target="_blank">💬 @duytoiktol</a></div>
+            <div class="contact-box">
+                <p style="margin-bottom:6px;">For support or questions:</p>
+                <a href="https://t.me/duytoiktol" target="_blank">💬 @duytoiktol</a>
+            </div>
         </div>
     </div>
 
@@ -244,17 +345,30 @@
 
     <!-- Bottom Nav -->
     <div class="bottom-nav">
-        <div class="nav-item active" data-tab="wallet" onclick="switchTab('wallet')"><span class="nav-icon">💳</span>Wallet</div>
-        <div class="nav-item" data-tab="ads" onclick="switchTab('ads')"><span class="nav-icon">🎰</span>Earn</div>
-        <div class="nav-item" data-tab="ref" onclick="switchTab('ref')"><span class="nav-icon">👥</span>Referral</div>
-        <div class="nav-item" data-tab="about" onclick="switchTab('about')"><span class="nav-icon">📋</span>About</div>
+        <div class="nav-item active" data-tab="wallet" onclick="switchTab('wallet')">
+            <span class="nav-icon">💳</span> Wallet
+        </div>
+        <div class="nav-item" data-tab="ads" onclick="switchTab('ads')">
+            <span class="nav-icon">🎰</span> Earn
+        </div>
+        <div class="nav-item" data-tab="ref" onclick="switchTab('ref')">
+            <span class="nav-icon">👥</span> Referral
+        </div>
+        <div class="nav-item" data-tab="about" onclick="switchTab('about')">
+            <span class="nav-icon">📋</span> About
+        </div>
     </div>
 
     <script>
         const API_URL = 'https://paid-cash-supplier-backend.onrender.com';
+        const SUPABASE_URL = 'https://ctghldtpbmpibrxbldgn.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_L97Lx532FQ9nbwGbP4jT_A_wo_v5SR5';
         const ADSGRAM_BLOCK_ID = '28714';
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+        tg.ready();
+        tg.expand();
 
         let isSpinning = false;
         const tgUser = tg.initDataUnsafe?.user;
@@ -294,7 +408,7 @@
             try {
                 const res = await fetch(`${API_URL}/api/user/update-balance`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegram_id: telegramId, reward })
+                    body: JSON.stringify({ telegram_id: telegramId, reward: reward })
                 });
                 const data = await res.json();
                 if (data.balance !== undefined) { cachedBalance = data.balance; updateBalance(data.balance); localStorage.setItem('pcs_balance', data.balance); }
@@ -315,28 +429,33 @@
         }
 
         async function loadWithdrawHistory() {
-            if (!telegramId) { document.getElementById('historyList').innerHTML = '<div class="no-data">Login first</div>'; return; }
+            if (!telegramId) { document.getElementById('historyList').innerHTML = '<div class="no-data">Please login first</div>'; return; }
             try {
                 const res = await fetch(`${API_URL}/api/withdrawals/${telegramId}`);
                 const data = await res.json();
-                if (!data || data.length === 0) { document.getElementById('historyList').innerHTML = '<div class="no-data">No withdrawals yet</div>'; return; }
+                if (data.length === 0) { document.getElementById('historyList').innerHTML = '<div class="no-data">No withdrawals yet</div>'; return; }
                 let html = '';
                 data.forEach(w => {
                     const date = new Date(w.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                     html += `<div class="history-item">
-                        <div class="history-info"><div class="method">${w.method.toUpperCase()}</div><div class="date">${date}</div></div>
-                        <div style="text-align:right;"><div style="color:#e65100;font-weight:700;">-${w.amount.toLocaleString()}</div><span class="status status-${w.status}">${w.status}</span></div>
+                        <div class="history-info">
+                            <div class="method">${w.method.toUpperCase()} → ${w.wallet_address ? w.wallet_address.substring(0,10)+'...' : 'N/A'}</div>
+                            <div class="date">${date}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="history-amount" style="color:#e65100;">-${w.amount.toLocaleString()}</div>
+                            <span class="status status-${w.status}">${w.status}</span>
+                        </div>
                     </div>`;
                 });
                 document.getElementById('historyList').innerHTML = html;
-            } catch (e) { document.getElementById('historyList').innerHTML = '<div class="no-data">Error</div>'; }
+            } catch (e) { document.getElementById('historyList').innerHTML = '<div class="no-data">Error loading history</div>'; }
         }
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            const el = document.getElementById('tab-' + tab);
-            if (el) el.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
             const nav = document.querySelector(`[data-tab="${tab}"]`);
             if (nav) nav.classList.add('active');
             if (tab === 'wallet') {
@@ -374,7 +493,7 @@
             return best;
         }
 
-        // ========== ADSGRAM THEO TÀI LIỆU CHÍNH THỨC ==========
+        // ========== SPIN + ADSGRAM (CHỈ SỬA HÀM NÀY) ==========
         function showAdsgramThenSpin(btn) {
             try {
                 // Khởi tạo Adsgram đúng chuẩn SDK
@@ -390,13 +509,11 @@
                     .then((result) => {
                         clearTimeout(timeout);
                         console.log('Ad completed:', result);
-                        // User xem hết quảng cáo → thưởng
                         doSpin(btn);
                     })
                     .catch((error) => {
                         clearTimeout(timeout);
                         console.log('Ad error/skipped:', error);
-                        // Lỗi hoặc không có quảng cáo → vẫn spin
                         doSpin(btn);
                     });
             } catch (e) {
@@ -448,26 +565,34 @@
             document.getElementById('success-screen').classList.remove('show');
             updateMethod(); clearErrors();
         }
+
         function cancelWithdraw() {
             document.getElementById('wallet-main').style.display = 'block';
             document.getElementById('withdraw-form').style.display = 'none';
+            document.getElementById('success-screen').classList.remove('show');
         }
+
         function backToWallet() {
             document.getElementById('wallet-main').style.display = 'block';
             document.getElementById('withdraw-form').style.display = 'none';
             document.getElementById('success-screen').classList.remove('show');
         }
+
         function updateMethod() {
             const m = document.getElementById('paymentMethod').value;
             const l = document.getElementById('walletLabel');
             const i = document.getElementById('walletAddress');
-            if (m === 'usdt') { l.innerText = 'USDT Wallet Address (BEP20)'; i.placeholder = '0x...'; }
-            else { l.innerText = m === 'paypal' ? 'PayPal Email' : 'FaucetPay Email'; i.placeholder = 'Enter email'; }
+            if (m === 'usdt') { l.innerText = 'USDT Wallet Address (BEP20)'; i.placeholder = 'Enter your USDT BEP20 address (0x...)'; }
+            else { l.innerText = m === 'paypal' ? 'PayPal Email Address' : 'FaucetPay Email Address'; i.placeholder = m === 'paypal' ? 'Enter your PayPal email' : 'Enter your FaucetPay email'; }
         }
+
         function clearErrors() {
             document.getElementById('walletError').style.display = 'none';
             document.getElementById('amountError').style.display = 'none';
+            document.getElementById('walletAddress').style.borderColor = '#c8e6c9';
+            document.getElementById('withdrawAmount').style.borderColor = '#c8e6c9';
         }
+
         function confirmWithdraw() {
             clearErrors();
             const m = document.getElementById('paymentMethod').value;
@@ -475,15 +600,18 @@
             const a = parseInt(document.getElementById('withdrawAmount').value);
             let ok = true;
             if (!w || w.length < 5) {
-                document.getElementById('walletError').innerText = 'Enter valid address/email';
-                document.getElementById('walletError').style.display = 'block'; ok = false;
+                document.getElementById('walletError').innerText = m === 'usdt' ? 'Enter valid BEP20 address' : 'Enter valid email';
+                document.getElementById('walletError').style.display = 'block';
+                document.getElementById('walletAddress').style.borderColor = '#e53935'; ok = false;
             }
             if (!a || a < 100000) {
-                document.getElementById('amountError').innerText = 'Min 100,000 coins';
-                document.getElementById('amountError').style.display = 'block'; ok = false;
+                document.getElementById('amountError').innerText = 'Min 100,000 coins ($1.00)';
+                document.getElementById('amountError').style.display = 'block';
+                document.getElementById('withdrawAmount').style.borderColor = '#e53935'; ok = false;
             } else if (a > cachedBalance) {
-                document.getElementById('amountError').innerText = 'Not enough coins!';
-                document.getElementById('amountError').style.display = 'block'; ok = false;
+                document.getElementById('amountError').innerText = 'Insufficient coins! Earn more in "Earn" tab.';
+                document.getElementById('amountError').style.display = 'block';
+                document.getElementById('withdrawAmount').style.borderColor = '#e53935'; ok = false;
             }
             if (!ok) return;
             document.getElementById('confirmMethod').innerText = m.toUpperCase();
@@ -491,7 +619,9 @@
             document.getElementById('confirmAmount').innerText = a.toLocaleString();
             document.getElementById('confirmOverlay').classList.add('show');
         }
+
         function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('show'); }
+
         async function processWithdraw() {
             const m = document.getElementById('paymentMethod').value;
             const w = document.getElementById('walletAddress').value.trim();
