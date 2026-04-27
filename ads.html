@@ -87,6 +87,7 @@
         .status-completed { background: #c8e6c9; color: #2e7d32; }
         .status-rejected { background: #ffcdd2; color: #c62828; }
         .no-data { text-align: center; color: #81c784; padding: 20px; }
+        .abuse-warning { text-align:center; color:#e65100; font-size:12px; margin-top:8px; font-weight:500; }
     </style>
 </head>
 <body>
@@ -131,6 +132,7 @@
             <div class="slot-row"><div class="slot-box" id="slot1">?</div><span class="slot-op">×</span><div class="slot-box" id="slot2">?</div><span class="slot-eq">=</span><div class="slot-result" id="slotResult">?</div></div>
             <p class="congrats-text" id="congratsText"></p>
             <button class="btn btn-gold" id="spinBtn" onclick="spinSlots()">🎰 SPIN & EARN</button>
+            <p class="abuse-warning">⚠️ To prevent abuse, you must click & watch the full ad to qualify for rewards</p>
         </div>
     </div>
 
@@ -194,8 +196,8 @@
 
         function resetSpin() {
             if (adTimeout) { clearTimeout(adTimeout); adTimeout = null; }
-            const btn = document.getElementById('spinBtn');
-            btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN';
+            document.getElementById('spinBtn').style.opacity = '1';
+            document.getElementById('spinBtn').innerText = '🎰 SPIN & EARN';
             isSpinning = false;
         }
 
@@ -203,36 +205,34 @@
             try {
                 const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
 
-                // Chỉ set timeout 60s - nếu sau 60s không có phản hồi gì mới báo lỗi
                 adTimeout = setTimeout(() => {
                     if (isSpinning) { resetSpin(); tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); }
                 }, 60000);
 
                 AdController.show()
                     .then((result) => {
-                        clearTimeout(adTimeout);
-                        adTimeout = null;
+                        clearTimeout(adTimeout); adTimeout = null;
+                        // CHỈ spin khi result.done === true (click vào ads và xem hết)
                         if (isSpinning && result && result.done) {
                             doSpin(btn);
                         } else if (isSpinning) {
                             resetSpin();
+                            if (!result || !result.done) {
+                                tg.showPopup({ title: '⚠️ Ad Required', message: 'You must click the ad and watch it fully to earn coins!' });
+                            }
                         }
                     })
                     .catch((error) => {
-                        clearTimeout(adTimeout);
-                        adTimeout = null;
+                        clearTimeout(adTimeout); adTimeout = null;
                         if (isSpinning) {
                             resetSpin();
                             const errMsg = error?.description || '';
-                            // Chỉ hiện pop-up nếu thực sự không có ads
-                            if (errMsg.includes('No ad') || errMsg.includes('No available') || errMsg.includes('no ad')) {
+                            if (errMsg.includes('No ad') || errMsg.includes('No available')) {
                                 tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' });
                             }
                         }
                     });
-            } catch (e) {
-                if (isSpinning) { resetSpin(); }
-            }
+            } catch (e) { if (isSpinning) resetSpin(); }
         }
 
         function spinSlots() { if (isSpinning) return; isSpinning = true; const btn = document.getElementById('spinBtn'); btn.style.opacity = '0.6'; btn.innerText = '📺 LOADING AD...'; document.getElementById('congratsText').innerText = ''; showAdsgramThenSpin(btn); }
