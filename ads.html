@@ -157,16 +157,21 @@
     </div>
 
     <script>
+        // ========== CONFIG ==========
         const API_URL = 'https://paid-cash-supplier-backend.onrender.com';
         const ADSGRAM_BLOCK_ID = '28714';
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
+        
         let isSpinning = false;
         let adTimeout = null;
+        let adWatchedSuccessfully = false; // Cờ xác nhận đã xem ads thành công
+        
         const tgUser = tg.initDataUnsafe?.user;
         const telegramId = tgUser?.id ? String(tgUser.id) : null;
         let cachedBalance = 0, userRefCode = '';
 
+        // ========== INIT USER ==========
         async function initUser() {
             if (!telegramId) { const s = localStorage.getItem('pcs_balance'); if (s) { cachedBalance = parseInt(s); updateBalance(cachedBalance); } return; }
             const p = new URLSearchParams(window.location.search), refParam = p.get('start') || '', referredBy = refParam.replace('ref', '');
@@ -177,67 +182,135 @@
             } catch (e) { console.error(e); }
         }
 
+        // ========== LOAD REF DETAILS ==========
         async function loadRefDetails() {
             if (!telegramId) return;
             try { const r = await fetch(`${API_URL}/api/user/${telegramId}/referrals`); const d = await r.json(); if (!d || d.length === 0) { document.getElementById('refList').innerHTML = '<div class="no-data">No referrals yet</div>'; return; } let h = ''; d.forEach(ref => { const date = ref.created_at ? new Date(ref.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?'; h += `<div class="ref-detail-item"><div><span class="name">${ref.first_name || 'User'}</span><br><span class="date">Joined: ${date}</span></div><span class="earned">+${(ref.total_earned || 0).toLocaleString()} coins</span></div>`; }); document.getElementById('refList').innerHTML = h; } catch (e) { document.getElementById('refList').innerHTML = '<div class="no-data">Error</div>'; }
         }
 
-        async function claimReward(reward) { if (!telegramId) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); return; } try { const r = await fetch(`${API_URL}/api/user/update-balance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegram_id: telegramId, reward }) }); const d = await r.json(); if (d.balance !== undefined) { cachedBalance = d.balance; updateBalance(d.balance); localStorage.setItem('pcs_balance', d.balance); } } catch (e) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); } }
+        // ========== CLAIM REWARD ==========
+        async function claimReward(reward) { 
+            if (!telegramId) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); return; } 
+            try { 
+                const r = await fetch(`${API_URL}/api/user/update-balance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegram_id: telegramId, reward }) }); 
+                const d = await r.json(); 
+                if (d.balance !== undefined) { cachedBalance = d.balance; updateBalance(d.balance); localStorage.setItem('pcs_balance', d.balance); } 
+            } catch (e) { cachedBalance += reward; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); } 
+        }
 
+        // ========== WITHDRAW API ==========
         async function submitWithdrawAPI(method, wallet, amount) { if (!telegramId) { tg.showPopup({ message: '❌ Cannot connect' }); return false; } try { const r = await fetch(`${API_URL}/api/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegram_id: telegramId, method, wallet_address: wallet, amount }) }); const d = await r.json(); if (d.error) { tg.showPopup({ message: '❌ ' + d.error }); return false; } return true; } catch (e) { tg.showPopup({ message: '❌ Network error' }); return false; } }
 
+        // ========== LOAD HISTORY ==========
         async function loadWithdrawHistory() { if (!telegramId) { document.getElementById('historyList').innerHTML = '<div class="no-data">Login first</div>'; return; } try { const r = await fetch(`${API_URL}/api/withdrawals/${telegramId}`); const d = await r.json(); if (!d || d.length === 0) { document.getElementById('historyList').innerHTML = '<div class="no-data">No withdrawals yet</div>'; return; } let h = ''; d.forEach(w => { const date = new Date(w.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); h += `<div class="history-item"><div class="history-info"><div class="method">${w.method.toUpperCase()}</div><div class="date">${date}</div></div><div style="text-align:right;"><div style="color:#e65100;font-weight:700;">-${w.amount.toLocaleString()}</div><span class="status status-${w.status}">${w.status}</span></div></div>`; }); document.getElementById('historyList').innerHTML = h; } catch (e) { document.getElementById('historyList').innerHTML = '<div class="no-data">Error</div>'; } }
 
+        // ========== UI HELPERS ==========
         function switchTab(tab) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); const el = document.getElementById('tab-' + tab); if (el) el.classList.add('active'); const nav = document.querySelector(`[data-tab="${tab}"]`); if (nav) nav.classList.add('active'); if (tab === 'wallet') { document.getElementById('wallet-main').style.display = 'block'; document.getElementById('withdraw-form').style.display = 'none'; document.getElementById('success-screen').classList.remove('show'); } if (tab === 'ref') loadRefDetails(); }
         function copyRef() { const refLink = document.getElementById('refLink').innerText; const text = `💎 Earn Free = No investment Crypto on Telegram\n\n✅ Bot Features:\n• Claim Unlimited Money by Watching Simple Ads\n• Rewards Per Claim Random 10-500 coin\n• Withdraw Very Low Only 1$\n• Payment to Crypto/Paypal\n• Payment Process Fast Hourly 24/7\n• Unlimited Ads Everyday Earn As Much As You Want\n\n👇 Click Start Claim Unlimited Below to Start Earn Unlimited Money 👇\n${refLink}`; navigator.clipboard.writeText(text); tg.showPopup({ message: '✅ Ref link copied!' }); }
         function updateBalance(newBal) { document.getElementById('balance').innerText = newBal.toLocaleString(); document.getElementById('balanceUsd').innerText = (newBal / 100000).toFixed(2); document.getElementById('formBalance').innerText = newBal.toLocaleString(); }
+        
+        // ========== REWARD LOGIC ==========
         function getRandomReward() { const r = Math.random() * 100; if (r < 70) return Math.floor(Math.random() * 51) + 10; if (r < 90) return Math.floor(Math.random() * 61) + 60; if (r < 96) return Math.floor(Math.random() * 31) + 120; if (r < 99) return Math.floor(Math.random() * 31) + 150; return Math.floor(Math.random() * 21) + 180; }
         function findFactors(target) { const pairs = []; for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) if (a * b === target) pairs.push([a, b]); if (pairs.length > 0) return pairs[Math.floor(Math.random() * pairs.length)]; let best = [1, 1], bestDiff = Infinity; for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) { const d = Math.abs(a * b - target); if (d < bestDiff) { bestDiff = d; best = [a, b]; } } return best; }
 
-        function resetSpin() {
+        // ========== RESET SPIN ==========
+        function resetSpin(msg = null) {
             if (adTimeout) { clearTimeout(adTimeout); adTimeout = null; }
             document.getElementById('spinBtn').style.opacity = '1';
             document.getElementById('spinBtn').innerText = '🎰 SPIN & EARN';
             isSpinning = false;
+            adWatchedSuccessfully = false;
+            if (msg) tg.showPopup(msg);
         }
 
+        // ========== ADSGRAM + SPIN (CHỈ SPIN KHI CLICK & XEM HẾT) ==========
         function showAdsgramThenSpin(btn) {
             try {
                 const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
 
+                // Timeout 60s - nếu không có phản hồi gì mới báo lỗi
                 adTimeout = setTimeout(() => {
-                    if (isSpinning) { resetSpin(); tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); }
+                    if (isSpinning && !adWatchedSuccessfully) {
+                        resetSpin({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' });
+                    }
                 }, 60000);
 
                 AdController.show()
                     .then((result) => {
-                        clearTimeout(adTimeout); adTimeout = null;
-                        // CHỈ spin khi result.done === true (click vào ads và xem hết)
-                        if (isSpinning && result && result.done) {
+                        clearTimeout(adTimeout);
+                        adTimeout = null;
+
+                        // KIỂM TRA NGHIÊM NGẶT: result.done phải === true
+                        if (result && result.done === true) {
+                            // Đánh dấu đã xem ads thành công
+                            adWatchedSuccessfully = true;
                             doSpin(btn);
-                        } else if (isSpinning) {
-                            resetSpin();
-                            if (!result || !result.done) {
-                                tg.showPopup({ title: '⚠️ Ad Required', message: 'You must click the ad and watch it fully to earn coins!' });
-                            }
+                        } else {
+                            // Không đạt điều kiện -> reset
+                            resetSpin({
+                                title: '⚠️ Ad Required',
+                                message: 'You must click the ad and watch it fully to earn coins!'
+                            });
                         }
                     })
                     .catch((error) => {
-                        clearTimeout(adTimeout); adTimeout = null;
-                        if (isSpinning) {
-                            resetSpin();
-                            const errMsg = error?.description || '';
-                            if (errMsg.includes('No ad') || errMsg.includes('No available')) {
-                                tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' });
+                        clearTimeout(adTimeout);
+                        adTimeout = null;
+
+                        if (isSpinning && !adWatchedSuccessfully) {
+                            const errMsg = (error?.description || '').toLowerCase();
+                            if (errMsg.includes('no ad') || errMsg.includes('no available')) {
+                                resetSpin({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' });
+                            } else {
+                                resetSpin();
                             }
                         }
                     });
-            } catch (e) { if (isSpinning) resetSpin(); }
+            } catch (e) {
+                if (adTimeout) { clearTimeout(adTimeout); adTimeout = null; }
+                if (isSpinning && !adWatchedSuccessfully) resetSpin();
+            }
         }
 
-        function spinSlots() { if (isSpinning) return; isSpinning = true; const btn = document.getElementById('spinBtn'); btn.style.opacity = '0.6'; btn.innerText = '📺 LOADING AD...'; document.getElementById('congratsText').innerText = ''; showAdsgramThenSpin(btn); }
-        function doSpin(btn) { btn.innerText = '🎰 SPINNING...'; document.getElementById('slotResult').innerText = '?'; const s1 = document.getElementById('slot1'), s2 = document.getElementById('slot2'); s1.classList.add('spinning'); s2.classList.add('spinning'); const interval = setInterval(() => { s1.innerText = Math.floor(Math.random() * 20) + 1; s2.innerText = Math.floor(Math.random() * 10) + 1; }, 100); setTimeout(() => { clearInterval(interval); s1.classList.remove('spinning'); s2.classList.remove('spinning'); const reward = getRandomReward(); const [a, b] = findFactors(reward); s1.innerText = a; s2.innerText = b; document.getElementById('slotResult').innerText = reward; cachedBalance += reward; updateBalance(cachedBalance); document.getElementById('adsWatched').innerText = parseInt(document.getElementById('adsWatched').innerText) + 1; document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`; claimReward(reward); btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; }, 2000); }
+        // ========== SPIN SLOTS ==========
+        function spinSlots() { 
+            if (isSpinning) return; 
+            isSpinning = true; 
+            adWatchedSuccessfully = false;
+            const btn = document.getElementById('spinBtn'); 
+            btn.style.opacity = '0.6'; 
+            btn.innerText = '📺 LOADING AD...'; 
+            document.getElementById('congratsText').innerText = ''; 
+            showAdsgramThenSpin(btn); 
+        }
 
+        // ========== DO SPIN ==========
+        function doSpin(btn) { 
+            btn.innerText = '🎰 SPINNING...'; 
+            document.getElementById('slotResult').innerText = '?'; 
+            const s1 = document.getElementById('slot1'), s2 = document.getElementById('slot2'); 
+            s1.classList.add('spinning'); s2.classList.add('spinning'); 
+            const interval = setInterval(() => { s1.innerText = Math.floor(Math.random() * 20) + 1; s2.innerText = Math.floor(Math.random() * 10) + 1; }, 100); 
+            setTimeout(() => { 
+                clearInterval(interval); 
+                s1.classList.remove('spinning'); s2.classList.remove('spinning'); 
+                const reward = getRandomReward(); 
+                const [a, b] = findFactors(reward); 
+                s1.innerText = a; s2.innerText = b; 
+                document.getElementById('slotResult').innerText = reward; 
+                cachedBalance += reward; 
+                updateBalance(cachedBalance); 
+                document.getElementById('adsWatched').innerText = parseInt(document.getElementById('adsWatched').innerText) + 1; 
+                document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`; 
+                claimReward(reward); 
+                btn.style.opacity = '1'; 
+                btn.innerText = '🎰 SPIN & EARN'; 
+                isSpinning = false; 
+                adWatchedSuccessfully = false;
+            }, 2000); 
+        }
+
+        // ========== WITHDRAW UI ==========
         function showWithdrawForm() { document.getElementById('wallet-main').style.display = 'none'; document.getElementById('withdraw-form').style.display = 'block'; document.getElementById('success-screen').classList.remove('show'); updateMethod(); clearErrors(); }
         function cancelWithdraw() { document.getElementById('wallet-main').style.display = 'block'; document.getElementById('withdraw-form').style.display = 'none'; }
         function backToWallet() { document.getElementById('wallet-main').style.display = 'block'; document.getElementById('withdraw-form').style.display = 'none'; document.getElementById('success-screen').classList.remove('show'); }
@@ -247,6 +320,7 @@
         function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('show'); }
         async function processWithdraw() { const m = document.getElementById('paymentMethod').value; const w = document.getElementById('walletAddress').value.trim(); const a = parseInt(document.getElementById('withdrawAmount').value); const ok = await submitWithdrawAPI(m, w, a); if (ok) { cachedBalance -= a; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); document.getElementById('confirmOverlay').classList.remove('show'); document.getElementById('withdraw-form').style.display = 'none'; document.getElementById('success-screen').classList.add('show'); document.getElementById('walletAddress').value = ''; document.getElementById('withdrawAmount').value = ''; } else { document.getElementById('confirmOverlay').classList.remove('show'); } }
 
+        // ========== START ==========
         initUser();
     </script>
 </body>
