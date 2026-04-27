@@ -40,8 +40,6 @@
         .slot-op { font-size: 24px; color: #2e7d32; } .slot-eq { font-size: 24px; color: #43a047; }
         .slot-result { width: 80px; height: 70px; background: linear-gradient(135deg, #c8e6c9, #a5d6a7); border: 3px solid #43a047; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #1b5e20; box-shadow: 0 4px 12px rgba(46,125,50,0.2); }
         .congrats-text { color: #2e7d32; font-weight: 700; font-size: 16px; margin-top: 8px; min-height: 24px; }
-        .odds-info { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; font-size: 10px; color: #81c784; }
-        .odds-chip { background: white; padding: 4px 10px; border-radius: 20px; border: 1px solid #c8e6c9; font-weight: 600; }
         .ref-card { background: white; border-radius: 24px; padding: 20px; margin: 10px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center; }
         .ref-link-box { background: #f1f8e9; padding: 14px; border-radius: 12px; margin: 10px 0; word-break: break-all; font-size: 13px; color: #2e7d32; border: 2px dashed #81c784; font-weight: 500; }
         .ref-stats { display: flex; justify-content: space-around; margin-top: 15px; gap: 10px; }
@@ -100,7 +98,6 @@
         <div class="balance-usd">100,000 Coins = $1.00 | ≈ $<span id="balanceUsd">0.00</span></div>
     </div>
 
-    <!-- Tab Wallet -->
     <div class="tab-content active" id="tab-wallet">
         <div id="wallet-main">
             <div class="info-row">
@@ -125,10 +122,8 @@
         <div class="success-screen" id="success-screen"><div class="icon">✅</div><h3>Withdrawal Submitted!</h3><p>Your request will be processed within 24 hours.</p><button class="btn btn-green" onclick="backToWallet()" style="margin-top:16px;">← Back to Wallet</button></div>
     </div>
 
-    <!-- Tab History -->
     <div class="tab-content" id="tab-history"><div class="history-card"><h4>📋 Withdraw History</h4><div id="historyList"><div class="no-data">Loading...</div></div></div><button class="btn btn-outline" onclick="switchTab('wallet')">← Back to Wallet</button></div>
 
-    <!-- Tab Earn -->
     <div class="tab-content" id="tab-ads">
         <div class="slots-container">
             <p style="color:#66bb6a; font-weight:600;">🎰 SPIN & EARN</p>
@@ -136,10 +131,9 @@
             <div class="slot-row"><div class="slot-box" id="slot1">?</div><span class="slot-op">×</span><div class="slot-box" id="slot2">?</div><span class="slot-eq">=</span><div class="slot-result" id="slotResult">?</div></div>
             <p class="congrats-text" id="congratsText"></p>
             <button class="btn btn-gold" id="spinBtn" onclick="spinSlots()">🎰 SPIN & EARN</button>
-            
+        </div>
     </div>
 
-    <!-- Tab Referral -->
     <div class="tab-content" id="tab-ref">
         <div class="ref-card">
             <h3 style="color:#2e7d32;">👥 Invite Friends</h3><p style="color:#66bb6a; margin:8px 0;">Earn 10% from referrals</p>
@@ -149,13 +143,10 @@
         </div>
     </div>
 
-    <!-- Tab About -->
     <div class="tab-content" id="tab-about"><div class="about-card"><h3>📋 About & Contact Us</h3><h4>📜 Terms of Service</h4><ul><li>Users must be at least 18 years old.</li><li>Any fraudulent activity is strictly prohibited.</li><li>We reserve the right to ban violators.</li><li>Each user is allowed only one account.</li></ul><h4>🚫 Prohibited Activities</h4><ul><li>Using bots, emulators, or automated scripts.</li><li>VPN/proxy abuse.</li><li>Multiple accounts for referral fraud.</li></ul><h4>📞 Contact Admin</h4><div class="contact-box"><a href="https://t.me/duytoiktol" target="_blank">💬 @duytoiktol</a></div></div></div>
 
-    <!-- Confirm Overlay -->
     <div class="confirm-overlay" id="confirmOverlay"><div class="confirm-box"><h3 style="color:#2e7d32;">⚠️ Confirm</h3><p>Method: <span class="confirm-val" id="confirmMethod">-</span></p><p>Address/Email: <span class="confirm-val" id="confirmWallet">-</span></p><p>Amount: <span class="confirm-val" id="confirmAmount">-</span> Coins</p><p style="color:#e53935; font-size:12px;">⚠️ Double check before confirming!</p><div class="confirm-btns"><button class="btn-cancel" onclick="closeConfirm()">Cancel</button><button class="btn-confirm" onclick="processWithdraw()">Confirm</button></div></div></div>
 
-    <!-- Bottom Nav -->
     <div class="bottom-nav">
         <div class="nav-item active" data-tab="wallet" onclick="switchTab('wallet')"><span class="nav-icon">💳</span>Wallet</div>
         <div class="nav-item" data-tab="ads" onclick="switchTab('ads')"><span class="nav-icon">🎰</span>Earn</div>
@@ -203,9 +194,11 @@
         function showAdsgramThenSpin(btn) {
             try {
                 const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
-                const timeout = setTimeout(() => { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); }, 20000);
-                AdController.show().then((result) => { clearTimeout(timeout); if (result && result.done) { doSpin(btn); } else { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ Not Completed', message: 'You must watch the full ad to earn coins!' }); } }).catch((error) => { clearTimeout(timeout); btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); });
-            } catch (e) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ Error', message: 'Cannot load ads.' }); }
+                const timeout = setTimeout(() => {
+                    if (isSpinning) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); }
+                }, 30000);
+                AdController.show().then((result) => { clearTimeout(timeout); if (isSpinning && result && result.done) { doSpin(btn); } else if (isSpinning) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; if (!result || !result.done) { tg.showPopup({ title: '⚠️ Not Completed', message: 'Watch the full ad to earn!' }); } } }).catch((error) => { clearTimeout(timeout); if (isSpinning) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; const errMsg = error?.description || ''; if (!errMsg.includes('skip') && !errMsg.includes('close')) { tg.showPopup({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' }); } } });
+            } catch (e) { if (isSpinning) { btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; isSpinning = false; } }
         }
 
         function spinSlots() { if (isSpinning) return; isSpinning = true; const btn = document.getElementById('spinBtn'); btn.style.opacity = '0.6'; btn.innerText = '📺 LOADING AD...'; document.getElementById('congratsText').innerText = ''; showAdsgramThenSpin(btn); }
