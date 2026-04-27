@@ -297,7 +297,7 @@
                     cachedBalance = data.user.balance;
                     updateBalance(cachedBalance);
                     localStorage.setItem('pcs_balance', cachedBalance);
-                    document.getElementById('refLink').innerText = `https://t.me/PaidCashSupplierBot?start=ref${userRefCode}`;
+                    document.getElementById('refLink').innerText = `https://t.me/paid_cash_suppiler_bot?start=ref${userRefCode}`;
                     document.getElementById('refCount').innerText = data.user.ref_count || 0;
                     document.getElementById('refEarnings').innerText = (data.user.ref_earnings || 0).toLocaleString();
                     document.getElementById('adsWatched').innerText = data.user.ads_watched || 0;
