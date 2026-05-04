@@ -23,9 +23,9 @@
         .btn-green { background: linear-gradient(135deg, #43a047, #2e7d32); color: white; box-shadow: 0 4px 16px rgba(46,125,50,0.25); }
         .btn-outline { background: white; border: 2px solid #43a047; color: #2e7d32; }
         .btn-gold { background: linear-gradient(135deg, #ffb300, #ff8f00); color: #fff; box-shadow: 0 4px 16px rgba(255,143,0,0.3); }
-        .btn-reset { background: #fff3e0; border: 2px solid #e65100; color: #e65100; font-size: 13px; padding: 8px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; margin-left: 10px; }
-        .btn-reset:active { transform: scale(0.95); }
-        .ads-header { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .btn-small { padding: 8px 16px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-small:active { transform: scale(0.96); }
+        .btn-reset { background: linear-gradient(135deg, #ef5350, #c62828); color: white; box-shadow: 0 2px 8px rgba(198,40,40,0.3); }
         .withdraw-card { background: white; border-radius: 24px; padding: 24px; margin: 10px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); }
         .withdraw-card h3 { text-align: center; margin-bottom: 20px; color: #2e7d32; font-size: 20px; }
         .form-group { margin-bottom: 16px; }
@@ -43,6 +43,8 @@
         .slot-op { font-size: 24px; color: #2e7d32; } .slot-eq { font-size: 24px; color: #43a047; }
         .slot-result { width: 80px; height: 70px; background: linear-gradient(135deg, #c8e6c9, #a5d6a7); border: 3px solid #43a047; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #1b5e20; box-shadow: 0 4px 12px rgba(46,125,50,0.2); }
         .congrats-text { color: #2e7d32; font-weight: 700; font-size: 16px; margin-top: 8px; min-height: 24px; }
+        .ads-info-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .ads-watched-text { color: #81c784; font-size: 13px; }
         .ref-card { background: white; border-radius: 24px; padding: 20px; margin: 10px 0; box-shadow: 0 4px 24px rgba(46,125,50,0.1); text-align: center; }
         .ref-link-box { background: #f1f8e9; padding: 14px; border-radius: 12px; margin: 10px 0; word-break: break-all; font-size: 13px; color: #2e7d32; border: 2px dashed #81c784; font-weight: 500; }
         .ref-stats { display: flex; justify-content: space-around; margin-top: 15px; gap: 10px; }
@@ -131,9 +133,9 @@
     <div class="tab-content" id="tab-ads">
         <div class="slots-container">
             <p style="color:#66bb6a; font-weight:600;">🎰 SPIN & EARN</p>
-            <div class="ads-header">
-                <span style="color:#81c784; font-size:13px;">Ads watched today: <span id="adsWatched" style="font-weight:700;">0</span></span>
-                <button class="btn-reset" onclick="resetAdsCount()" title="Reset ads watched count">🔄 Reset</button>
+            <div class="ads-info-row">
+                <span class="ads-watched-text">Ads watched today: <span id="adsWatched">0</span></span>
+                <button class="btn-small btn-reset" onclick="resetAdsCount()">🔄 Reset Ads</button>
             </div>
             <div class="slot-row"><div class="slot-box" id="slot1">?</div><span class="slot-op">×</span><div class="slot-box" id="slot2">?</div><span class="slot-eq">=</span><div class="slot-result" id="slotResult">?</div></div>
             <p class="congrats-text" id="congratsText"></p>
@@ -171,21 +173,11 @@
         
         let isSpinning = false;
         let adTimeout = null;
-        let adWatchedSuccessfully = false;
+        let adWatchedSuccessfully = false; // Cờ xác nhận đã xem ads thành công
         
         const tgUser = tg.initDataUnsafe?.user;
         const telegramId = tgUser?.id ? String(tgUser.id) : null;
         let cachedBalance = 0, userRefCode = '';
-
-        // ========== RESET ADS COUNT ==========
-        function resetAdsCount() {
-            // Reset hiển thị về 0
-            document.getElementById('adsWatched').innerText = '0';
-            // Lưu vào localStorage
-            localStorage.setItem('pcs_ads_watched', '0');
-            localStorage.setItem('pcs_ads_reset_date', new Date().toDateString());
-            tg.showPopup({ message: '✅ Ads count reset to 0' });
-        }
 
         // ========== INIT USER ==========
         async function initUser() {
@@ -194,29 +186,7 @@
             try {
                 const r = await fetch(`${API_URL}/api/user/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegram_id: telegramId, username: tgUser?.username || '', first_name: tgUser?.first_name || 'User', referred_by: referredBy || null }) });
                 const d = await r.json();
-                if (d.user) { 
-                    userRefCode = d.user.ref_code; 
-                    cachedBalance = d.user.balance; 
-                    updateBalance(cachedBalance); 
-                    localStorage.setItem('pcs_balance', cachedBalance); 
-                    document.getElementById('refLink').innerText = `https://t.me/paid_cash_suppiler_bot?start=ref${userRefCode}`; 
-                    document.getElementById('refCount').innerText = d.user.ref_count || 0; 
-                    document.getElementById('refEarnings').innerText = (d.user.ref_earnings || 0).toLocaleString(); 
-                    
-                    // Kiểm tra xem hôm nay đã reset chưa
-                    const resetDate = localStorage.getItem('pcs_ads_reset_date');
-                    const today = new Date().toDateString();
-                    if (resetDate !== today) {
-                        // Ngày mới -> tự động reset
-                        localStorage.setItem('pcs_ads_watched', '0');
-                        localStorage.setItem('pcs_ads_reset_date', today);
-                        document.getElementById('adsWatched').innerText = '0';
-                    } else {
-                        // Lấy số đã lưu
-                        const savedAds = localStorage.getItem('pcs_ads_watched');
-                        document.getElementById('adsWatched').innerText = savedAds || d.user.ads_watched || 0;
-                    }
-                }
+                if (d.user) { userRefCode = d.user.ref_code; cachedBalance = d.user.balance; updateBalance(cachedBalance); localStorage.setItem('pcs_balance', cachedBalance); document.getElementById('refLink').innerText = `https://t.me/paid_cash_suppiler_bot?start=ref${userRefCode}`; document.getElementById('refCount').innerText = d.user.ref_count || 0; document.getElementById('refEarnings').innerText = (d.user.ref_earnings || 0).toLocaleString(); document.getElementById('adsWatched').innerText = d.user.ads_watched || 0; }
             } catch (e) { console.error(e); }
         }
 
@@ -251,6 +221,32 @@
         function getRandomReward() { const r = Math.random() * 100; if (r < 70) return Math.floor(Math.random() * 51) + 10; if (r < 90) return Math.floor(Math.random() * 61) + 60; if (r < 96) return Math.floor(Math.random() * 31) + 120; if (r < 99) return Math.floor(Math.random() * 31) + 150; return Math.floor(Math.random() * 21) + 180; }
         function findFactors(target) { const pairs = []; for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) if (a * b === target) pairs.push([a, b]); if (pairs.length > 0) return pairs[Math.floor(Math.random() * pairs.length)]; let best = [1, 1], bestDiff = Infinity; for (let a = 1; a <= 20; a++) for (let b = 1; b <= 10; b++) { const d = Math.abs(a * b - target); if (d < bestDiff) { bestDiff = d; best = [a, b]; } } return best; }
 
+        // ========== RESET ADS COUNT ==========
+        async function resetAdsCount() {
+            if (!telegramId) {
+                document.getElementById('adsWatched').innerText = '0';
+                tg.showPopup({ message: '✅ Ads count reset!' });
+                return;
+            }
+            try {
+                const r = await fetch(`${API_URL}/api/user/reset-ads`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: telegramId })
+                });
+                const d = await r.json();
+                if (d.success) {
+                    document.getElementById('adsWatched').innerText = '0';
+                    tg.showPopup({ message: '✅ Ads count reset to 0!' });
+                } else {
+                    tg.showPopup({ message: '❌ Failed to reset ads count' });
+                }
+            } catch (e) {
+                document.getElementById('adsWatched').innerText = '0';
+                tg.showPopup({ message: '✅ Ads count reset locally!' });
+            }
+        }
+
         // ========== RESET SPIN ==========
         function resetSpin(msg = null) {
             if (adTimeout) { clearTimeout(adTimeout); adTimeout = null; }
@@ -261,10 +257,12 @@
             if (msg) tg.showPopup(msg);
         }
 
-        // ========== ADSGRAM + SPIN ==========
+        // ========== ADSGRAM + SPIN (CHỈ SPIN KHI CLICK & XEM HẾT) ==========
         function showAdsgramThenSpin(btn) {
             try {
                 const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
+
+                // Timeout 60s - nếu không có phản hồi gì mới báo lỗi
                 adTimeout = setTimeout(() => {
                     if (isSpinning && !adWatchedSuccessfully) {
                         resetSpin({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' });
@@ -273,36 +271,54 @@
 
                 AdController.show()
                     .then((result) => {
-                        clearTimeout(adTimeout); adTimeout = null;
+                        clearTimeout(adTimeout);
+                        adTimeout = null;
+
+                        // KIỂM TRA NGHIÊM NGẶT: result.done phải === true
                         if (result && result.done === true) {
+                            // Đánh dấu đã xem ads thành công
                             adWatchedSuccessfully = true;
                             doSpin(btn);
                         } else {
-                            resetSpin({ title: '⚠️ Ad Required', message: 'You must click the ad and watch it fully to earn coins!' });
+                            // Không đạt điều kiện -> reset
+                            resetSpin({
+                                title: '⚠️ Ad Required',
+                                message: 'You must click the ad and watch it fully to earn coins!'
+                            });
                         }
                     })
                     .catch((error) => {
-                        clearTimeout(adTimeout); adTimeout = null;
+                        clearTimeout(adTimeout);
+                        adTimeout = null;
+
                         if (isSpinning && !adWatchedSuccessfully) {
                             const errMsg = (error?.description || '').toLowerCase();
                             if (errMsg.includes('no ad') || errMsg.includes('no available')) {
                                 resetSpin({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' });
-                            } else { resetSpin(); }
+                            } else {
+                                resetSpin();
+                            }
                         }
                     });
-            } catch (e) { if (adTimeout) { clearTimeout(adTimeout); adTimeout = null; } if (isSpinning && !adWatchedSuccessfully) resetSpin(); }
+            } catch (e) {
+                if (adTimeout) { clearTimeout(adTimeout); adTimeout = null; }
+                if (isSpinning && !adWatchedSuccessfully) resetSpin();
+            }
         }
 
+        // ========== SPIN SLOTS ==========
         function spinSlots() { 
             if (isSpinning) return; 
             isSpinning = true; 
             adWatchedSuccessfully = false;
             const btn = document.getElementById('spinBtn'); 
-            btn.style.opacity = '0.6'; btn.innerText = '📺 LOADING AD...'; 
+            btn.style.opacity = '0.6'; 
+            btn.innerText = '📺 LOADING AD...'; 
             document.getElementById('congratsText').innerText = ''; 
             showAdsgramThenSpin(btn); 
         }
 
+        // ========== DO SPIN ==========
         function doSpin(btn) { 
             btn.innerText = '🎰 SPINNING...'; 
             document.getElementById('slotResult').innerText = '?'; 
@@ -310,18 +326,21 @@
             s1.classList.add('spinning'); s2.classList.add('spinning'); 
             const interval = setInterval(() => { s1.innerText = Math.floor(Math.random() * 20) + 1; s2.innerText = Math.floor(Math.random() * 10) + 1; }, 100); 
             setTimeout(() => { 
-                clearInterval(interval); s1.classList.remove('spinning'); s2.classList.remove('spinning'); 
-                const reward = getRandomReward(); const [a, b] = findFactors(reward); 
-                s1.innerText = a; s2.innerText = b; document.getElementById('slotResult').innerText = reward; 
-                cachedBalance += reward; updateBalance(cachedBalance); 
-                // Tăng ads watched
-                let currentAds = parseInt(document.getElementById('adsWatched').innerText) + 1;
-                document.getElementById('adsWatched').innerText = currentAds;
-                localStorage.setItem('pcs_ads_watched', currentAds);
+                clearInterval(interval); 
+                s1.classList.remove('spinning'); s2.classList.remove('spinning'); 
+                const reward = getRandomReward(); 
+                const [a, b] = findFactors(reward); 
+                s1.innerText = a; s2.innerText = b; 
+                document.getElementById('slotResult').innerText = reward; 
+                cachedBalance += reward; 
+                updateBalance(cachedBalance); 
+                document.getElementById('adsWatched').innerText = parseInt(document.getElementById('adsWatched').innerText) + 1; 
                 document.getElementById('congratsText').innerText = `🎉 +${reward} Coins! (${a} × ${b} = ${reward})`; 
                 claimReward(reward); 
-                btn.style.opacity = '1'; btn.innerText = '🎰 SPIN & EARN'; 
-                isSpinning = false; adWatchedSuccessfully = false;
+                btn.style.opacity = '1'; 
+                btn.innerText = '🎰 SPIN & EARN'; 
+                isSpinning = false; 
+                adWatchedSuccessfully = false;
             }, 2000); 
         }
 
