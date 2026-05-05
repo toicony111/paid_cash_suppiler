@@ -104,7 +104,21 @@
         <div class="balance-usd">100,000 Coins = $1.00 | ≈ $<span id="balanceUsd">0.00</span></div>
     </div>
 
-    <div class="tab-content active" id="tab-wallet">
+    <div class="tab-content active" id="tab-home">
+        <div class="slots-container">
+            <p style="color:#66bb6a; font-weight:600;">🎰 SPIN & EARN</p>
+            <div class="ads-info-row">
+                <span class="ads-watched-text">Ads watched today: <span id="adsWatched">0</span></span>
+                <button class="btn-small btn-reset" onclick="resetAdsCount()">🔄 Reset Ads</button>
+            </div>
+            <div class="slot-row"><div class="slot-box" id="slot1">?</div><span class="slot-op">×</span><div class="slot-box" id="slot2">?</div><span class="slot-eq">=</span><div class="slot-result" id="slotResult">?</div></div>
+            <p class="congrats-text" id="congratsText"></p>
+            <button class="btn btn-gold" id="spinBtn" onclick="spinSlots()">🎰 SPIN & EARN</button>
+            <p class="abuse-warning">⚠️ To prevent abuse, you must click & watch the full ad to qualify for rewards</p>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-wallet">
         <div id="wallet-main">
             <div class="info-row">
                 <div class="info-chip"><div class="val">$1.00</div><div class="lbl">Min Withdraw</div></div>
@@ -130,20 +144,6 @@
 
     <div class="tab-content" id="tab-history"><div class="history-card"><h4>📋 Withdraw History</h4><div id="historyList"><div class="no-data">Loading...</div></div></div><button class="btn btn-outline" onclick="switchTab('wallet')">← Back to Wallet</button></div>
 
-    <div class="tab-content" id="tab-ads">
-        <div class="slots-container">
-            <p style="color:#66bb6a; font-weight:600;">🎰 SPIN & EARN</p>
-            <div class="ads-info-row">
-                <span class="ads-watched-text">Ads watched today: <span id="adsWatched">0</span></span>
-                <button class="btn-small btn-reset" onclick="resetAdsCount()">🔄 Reset Ads</button>
-            </div>
-            <div class="slot-row"><div class="slot-box" id="slot1">?</div><span class="slot-op">×</span><div class="slot-box" id="slot2">?</div><span class="slot-eq">=</span><div class="slot-result" id="slotResult">?</div></div>
-            <p class="congrats-text" id="congratsText"></p>
-            <button class="btn btn-gold" id="spinBtn" onclick="spinSlots()">🎰 SPIN & EARN</button>
-            <p class="abuse-warning">⚠️ To prevent abuse, you must click & watch the full ad to qualify for rewards</p>
-        </div>
-    </div>
-
     <div class="tab-content" id="tab-ref">
         <div class="ref-card">
             <h3 style="color:#2e7d32;">👥 Invite Friends</h3><p style="color:#66bb6a; margin:8px 0;">Earn 10% from referrals</p>
@@ -158,8 +158,8 @@
     <div class="confirm-overlay" id="confirmOverlay"><div class="confirm-box"><h3 style="color:#2e7d32;">⚠️ Confirm</h3><p>Method: <span class="confirm-val" id="confirmMethod">-</span></p><p>Address/Email: <span class="confirm-val" id="confirmWallet">-</span></p><p>Amount: <span class="confirm-val" id="confirmAmount">-</span> Coins</p><p style="color:#e53935; font-size:12px;">⚠️ Double check before confirming!</p><div class="confirm-btns"><button class="btn-cancel" onclick="closeConfirm()">Cancel</button><button class="btn-confirm" onclick="processWithdraw()">Confirm</button></div></div></div>
 
     <div class="bottom-nav">
-        <div class="nav-item active" data-tab="wallet" onclick="switchTab('wallet')"><span class="nav-icon">💳</span>Wallet</div>
-        <div class="nav-item" data-tab="ads" onclick="switchTab('ads')"><span class="nav-icon">🎰</span>Earn</div>
+        <div class="nav-item active" data-tab="home" onclick="switchTab('home')"><span class="nav-icon">🏠</span>Home</div>
+        <div class="nav-item" data-tab="wallet" onclick="switchTab('wallet')"><span class="nav-icon">💳</span>Wallet</div>
         <div class="nav-item" data-tab="ref" onclick="switchTab('ref')"><span class="nav-icon">👥</span>Referral</div>
         <div class="nav-item" data-tab="about" onclick="switchTab('about')"><span class="nav-icon">📋</span>About</div>
     </div>
@@ -173,7 +173,7 @@
         
         let isSpinning = false;
         let adTimeout = null;
-        let adWatchedSuccessfully = false; // Cờ xác nhận đã xem ads thành công
+        let adWatchedSuccessfully = false;
         
         const tgUser = tg.initDataUnsafe?.user;
         const telegramId = tgUser?.id ? String(tgUser.id) : null;
@@ -207,14 +207,14 @@
         }
 
         // ========== WITHDRAW API ==========
-        async function submitWithdrawAPI(method, wallet, amount) { if (!telegramId) { tg.showPopup({ message: '❌ Cannot connect' }); return false; } try { const r = await fetch(`${API_URL}/api/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegram_id: telegramId, method, wallet_address: wallet, amount }) }); const d = await r.json(); if (d.error) { tg.showPopup({ message: '❌ ' + d.error }); return false; } return true; } catch (e) { tg.showPopup({ message: '❌ Network error' }); return false; } }
+        async function submitWithdrawAPI(method, wallet, amount) { if (!telegramId) { console.log('Cannot connect'); return false; } try { const r = await fetch(`${API_URL}/api/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegram_id: telegramId, method, wallet_address: wallet, amount }) }); const d = await r.json(); if (d.error) { console.log('Error: ' + d.error); return false; } return true; } catch (e) { console.log('Network error'); return false; } }
 
         // ========== LOAD HISTORY ==========
         async function loadWithdrawHistory() { if (!telegramId) { document.getElementById('historyList').innerHTML = '<div class="no-data">Login first</div>'; return; } try { const r = await fetch(`${API_URL}/api/withdrawals/${telegramId}`); const d = await r.json(); if (!d || d.length === 0) { document.getElementById('historyList').innerHTML = '<div class="no-data">No withdrawals yet</div>'; return; } let h = ''; d.forEach(w => { const date = new Date(w.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); h += `<div class="history-item"><div class="history-info"><div class="method">${w.method.toUpperCase()}</div><div class="date">${date}</div></div><div style="text-align:right;"><div style="color:#e65100;font-weight:700;">-${w.amount.toLocaleString()}</div><span class="status status-${w.status}">${w.status}</span></div></div>`; }); document.getElementById('historyList').innerHTML = h; } catch (e) { document.getElementById('historyList').innerHTML = '<div class="no-data">Error</div>'; } }
 
         // ========== UI HELPERS ==========
         function switchTab(tab) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); const el = document.getElementById('tab-' + tab); if (el) el.classList.add('active'); const nav = document.querySelector(`[data-tab="${tab}"]`); if (nav) nav.classList.add('active'); if (tab === 'wallet') { document.getElementById('wallet-main').style.display = 'block'; document.getElementById('withdraw-form').style.display = 'none'; document.getElementById('success-screen').classList.remove('show'); } if (tab === 'ref') loadRefDetails(); }
-        function copyRef() { const refLink = document.getElementById('refLink').innerText; const text = `💎 Earn Free = No investment Crypto on Telegram\n\n✅ Bot Features:\n• Claim Unlimited Money by Watching Simple Ads\n• Rewards Per Claim Random 10-500 coin\n• Withdraw Very Low Only 1$\n• Payment to Crypto/Paypal\n• Payment Process Fast Hourly 24/7\n• Unlimited Ads Everyday Earn As Much As You Want\n\n👇 Click Start Claim Unlimited Below to Start Earn Unlimited Money 👇\n${refLink}`; navigator.clipboard.writeText(text); tg.showPopup({ message: '✅ Ref link copied!' }); }
+        function copyRef() { const refLink = document.getElementById('refLink').innerText; const text = `💎 Earn Free = No investment Crypto on Telegram\n\n✅ Bot Features:\n• Claim Unlimited Money by Watching Simple Ads\n• Rewards Per Claim Random 10-500 coin\n• Withdraw Very Low Only 1$\n• Payment to Crypto/Paypal\n• Payment Process Fast Hourly 24/7\n• Unlimited Ads Everyday Earn As Much As You Want\n\n👇 Click Start Claim Unlimited Below to Start Earn Unlimited Money 👇\n${refLink}`; navigator.clipboard.writeText(text); console.log('Ref link copied!'); }
         function updateBalance(newBal) { document.getElementById('balance').innerText = newBal.toLocaleString(); document.getElementById('balanceUsd').innerText = (newBal / 100000).toFixed(2); document.getElementById('formBalance').innerText = newBal.toLocaleString(); }
         
         // ========== REWARD LOGIC ==========
@@ -225,7 +225,7 @@
         async function resetAdsCount() {
             if (!telegramId) {
                 document.getElementById('adsWatched').innerText = '0';
-                tg.showPopup({ message: '✅ Ads count reset!' });
+                console.log('Ads count reset!');
                 return;
             }
             try {
@@ -237,24 +237,23 @@
                 const d = await r.json();
                 if (d.success) {
                     document.getElementById('adsWatched').innerText = '0';
-                    tg.showPopup({ message: '✅ Ads count reset to 0!' });
+                    console.log('Ads count reset to 0!');
                 } else {
-                    tg.showPopup({ message: '❌ Failed to reset ads count' });
+                    console.log('Failed to reset ads count');
                 }
             } catch (e) {
                 document.getElementById('adsWatched').innerText = '0';
-                tg.showPopup({ message: '✅ Ads count reset locally!' });
+                console.log('Ads count reset locally!');
             }
         }
 
         // ========== RESET SPIN ==========
-        function resetSpin(msg = null) {
+        function resetSpin() {
             if (adTimeout) { clearTimeout(adTimeout); adTimeout = null; }
             document.getElementById('spinBtn').style.opacity = '1';
             document.getElementById('spinBtn').innerText = '🎰 SPIN & EARN';
             isSpinning = false;
             adWatchedSuccessfully = false;
-            if (msg) tg.showPopup(msg);
         }
 
         // ========== ADSGRAM + SPIN (CHỈ SPIN KHI CLICK & XEM HẾT) ==========
@@ -262,10 +261,10 @@
             try {
                 const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
 
-                // Timeout 60s - nếu không có phản hồi gì mới báo lỗi
+                // Timeout 60s - nếu không có phản hồi gì thì reset
                 adTimeout = setTimeout(() => {
                     if (isSpinning && !adWatchedSuccessfully) {
-                        resetSpin({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' });
+                        resetSpin();
                     }
                 }, 60000);
 
@@ -276,15 +275,10 @@
 
                         // KIỂM TRA NGHIÊM NGẶT: result.done phải === true
                         if (result && result.done === true) {
-                            // Đánh dấu đã xem ads thành công
                             adWatchedSuccessfully = true;
                             doSpin(btn);
                         } else {
-                            // Không đạt điều kiện -> reset
-                            resetSpin({
-                                title: '⚠️ Ad Required',
-                                message: 'You must click the ad and watch it fully to earn coins!'
-                            });
+                            resetSpin();
                         }
                     })
                     .catch((error) => {
@@ -292,12 +286,7 @@
                         adTimeout = null;
 
                         if (isSpinning && !adWatchedSuccessfully) {
-                            const errMsg = (error?.description || '').toLowerCase();
-                            if (errMsg.includes('no ad') || errMsg.includes('no available')) {
-                                resetSpin({ title: '⚠️ No Ads', message: 'No ads available. Try again later.' });
-                            } else {
-                                resetSpin();
-                            }
+                            resetSpin();
                         }
                     });
             } catch (e) {
